@@ -1229,16 +1229,6 @@ function hideCreditCardDiv() {
  Dim varFromThisPage As Integer = 0
  Dim varNewReleaseYesSelected As String = ""
 
- 'Name of Cart
- If Session("StoreName") <> "" Then
-  varServerCounter = Session("CustomerServerCounter")
-  NameOfCart = "W_CART_" & varServerCounter
-  varPriceGroup = Session("PriceGroup")
- Else
-  NameOfCart = "CART" & Session.SessionID & Session("CartRandomNumbersExtension")
-  varPriceGroup = "RetailPrice"
- End If
-
  'CustomerID
  Dim varCustomerID As String = Session("CustomerID")
  If Not IsNumeric(varCustomerID) Then varCustomerID = ""
