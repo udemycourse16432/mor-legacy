@@ -1003,7 +1003,7 @@ function fcnDoNotEmailSignInCredentials(){
     CMD_X.Parameters.AddWithValue("@LogInEmail", IsSomething(DefaultEmail, DBNull.Value))
     CMD_X.Parameters.AddWithValue("@Password", IsSomething(DefaultPword, DBNull.Value))
     CMD_X.Parameters.AddWithValue("@HowFoundUs", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@IPAddress", Request.ServerVariables("HTTP_X_FORWARDED_FOR"))
+    CMD_X.Parameters.AddWithValue("@IPAddress", IsSomething(Request.ServerVariables("HTTP_X_FORWARDED_FOR"), DBNull.Value))
     CMD_X.Parameters.AddWithValue("@ResidentialDelivery", IsSomething(DefaultResidentialDelivery, DBNull.Value))
     CMD_X.Parameters.AddWithValue("@ChargeSalesTax", IsSomething(DefaultChargeSalesTax, DBNull.Value))
     Dim outputID As New SqlParameter("@IDOUTPUT", Data.SqlDbType.Int)
