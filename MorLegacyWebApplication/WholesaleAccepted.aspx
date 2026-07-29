@@ -8,16 +8,6 @@
 
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
 
-<script type="text/javascript"language="javascript">
-
-function fovs(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "l.gif"
-}
-function fous(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
-}
-
-</script>
 <style type="text/css">
  P {font-family:verdana,arial,helvetica,sans-serif;font-size:12px;color:#000000;display:inline}
  p.pow {font-family:verdana,arial,helvetica;font-size:12px;color:#ffffff;background-color:#566BEC;min-height:20px;padding-bottom:2px;cursor:pointer}

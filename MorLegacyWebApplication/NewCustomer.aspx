@@ -31,7 +31,6 @@ var zz
 var showingname="a"
 var VS=0
 var foc=""
-var isW3C=(document.getElementById) ? true : false;
 function focusNext(form, TabNumber, evt){
  evt=(evt)? evt:event;
  var charCode=(evt.charCode)? evt.charCode:
@@ -80,10 +79,6 @@ function CityOnChange(){
  varElem=document.getElementById('City')
  varElem2=document.getElementById('GetPostalCodeForCity')
  varElem2.value=varElem.value
-}
-function HideDiv(x){
- varElem=(isW3C) ? document.getElementById(x):document.all(x);
- varElem.style.visibility='hidden'
 }
 function popUp(url) {
  sealWin=window.open(url,"win",'toolbar=0,location=0,directories=0,status=1,menubar=1,scrollbars=1,resizable=1,width=500,height=450');
@@ -142,12 +137,6 @@ function SubmitForm(){
   return false
  }
  document.NC.submit()
-}
-function fov(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "h.gif"
-}
-function fou(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
 }
 function sameAsShipping() {
  elemC = document.getElementById('Country')

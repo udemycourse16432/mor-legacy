@@ -23,19 +23,12 @@
 </style>
 
 <script type="text/javascript" language="javascript">
-var isW3C=(document.getElementById) ? true : false;
 function countrychosen(){
  varElem=(isW3C) ? document.getElementById("CountryListCode"):document.all("CountryListCode");
  document.shiptocounty.submit()
 }
 function submitform(){
  document.shiptocounty.submit()
-}
-function fov(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "h.gif"
-}
-function fou(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
 }
 </script>
 

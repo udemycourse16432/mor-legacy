@@ -16,7 +16,6 @@ var loadingID
 var runningScript=0
 VS=0
 var showingname="a"
-var isW3C = (document.getElementById) ? true : false;
 var intNLast = -1
 
 function removePaymentMethod(x) {
@@ -77,31 +76,6 @@ function UpdateCIEntry(counter,JRN){
  elemRand.value=Math.round(Math.random()*1000000000)
  document.CI.submit()
 }
-function EscapeTotal(x){
- x=escape(x)
- while (x.indexOf("*") != -1){
-  x=x.replace("*","%2A")
- }
- while (x.indexOf("@") != -1){
-  x=x.replace("@","%40")
- }
- while (x.indexOf("-") != -1){
-  x=x.replace("-","%2D")
- }
- while (x.indexOf("_") != -1){
-  x=x.replace("_","%5F")
- }
- while (x.indexOf("+") != -1){
-  x=x.replace("+","%2B")
- }
- while (x.indexOf(".") != -1){
-  x=x.replace(".","%2E")
- }
- while (x.indexOf("/") != -1){
-  x=x.replace("/","%2F")
- }
- return x
-}
 function EmailErnieSavedCart(email){
  if (window.XMLHttpRequest){
   xmlhttp=new XMLHttpRequest()
@@ -121,10 +95,6 @@ function EmailErnieSavedCart(email){
  xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded")
  xmlhttp.send("Email="+EscapeTotal(email))
 }
-function HideDiv(yy){
- varElem=(isW3C) ? document.getElementById(yy):document.all(yy);
- varElem.style.visibility='hidden'
-}
 function SavedRetailCarts(x){
  var ElemX=(isW3C) ? document.getElementById('SavedRetailCartEmail'):document.all('SavedRetailCartEmail');
  ElemX.value=x
@@ -138,13 +108,7 @@ function SavedRetailCartsInput(){
   return
  }
  ElemX.value=ElemInput.value
- document.PU.submit()
-}
-function fov(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "h.gif"
-}
-function fou(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
+  document.PU.submit()
 }
 
 function CountryChanged(){

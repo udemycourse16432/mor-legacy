@@ -49,6 +49,28 @@
     function fous(a,q){
         a.src = '<%=AssetsPath()%>/' + q + ".gif"
     }
+    function fov(a,q){
+        a.src = '<%=AssetsPath()%>/' + q + "h.gif"
+    }
+    function fou(a,q){
+        a.src = '<%=AssetsPath()%>/' + q + ".gif"
+    }
+    var isW3C = (document.getElementById) ? true : false;
+    function HideDiv(yy){
+        varElem=(isW3C) ? document.getElementById(yy):document.all(yy);
+        varElem.style.visibility="hidden"
+    }
+    function EscapeTotal(x){
+        x=escape(x)
+        while (x.indexOf("*") != -1){x=x.replace("*","%2A")}
+        while (x.indexOf("@") != -1){x=x.replace("@","%40")}
+        while (x.indexOf("-") != -1){x=x.replace("-","%2D")}
+        while (x.indexOf("_") != -1){x=x.replace("_","%5F")}
+        while (x.indexOf("+") != -1){x=x.replace("+","%2B")}
+        while (x.indexOf(".") != -1){x=x.replace(".","%2E")}
+        while (x.indexOf("/") != -1){x=x.replace("/","%2F")}
+        return x
+    }
     </script>
 
     <style type="text/css">

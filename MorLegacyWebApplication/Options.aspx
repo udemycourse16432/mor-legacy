@@ -48,21 +48,7 @@
     var intX = 0
     var loadingID
     var runningScript = 0
-    var isW3C = (document.getElementById) ? true : false;
 
-    function EscapeTotal(x) {
-        x = escape(x)
-        while (x.indexOf("*") != -1) { x = x.replace("*", "%2A") }
-        while (x.indexOf("@") != -1) { x = x.replace("@", "%40") }
-        while (x.indexOf("-") != -1) { x = x.replace("-", "%2D") }
-        while (x.indexOf("_") != -1) { x = x.replace("_", "%5F") }
-        while (x.indexOf("+") != -1) { x = x.replace("+", "%2B") }
-        while (x.indexOf(".") != -1) { x = x.replace(".", "%2E") }
-        while (x.indexOf("/") != -1) { x = x.replace("/", "%2F") }
-        return x
-    }
-    function fov(a, q) { a.src = '<%=AssetsPath()%>/' + q + "h.gif" }
-    function fou(a, q) { a.src = '<%=AssetsPath()%>/' + q + ".gif" }
     function nocart() { alert('There are currently no items in your shopping cart.  If you wish, you can add items to your shopping cart and then save it to use at a later date.') }
     function recordslimit() { varElem = (isW3C) ? document.getElementById('ItemsPerPage') : document.all('ItemsPerPage'); document.cookie = "RecordsLimit=" + varElem.value + "; path=/" }
     function submitform() {
