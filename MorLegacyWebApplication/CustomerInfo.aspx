@@ -6,6 +6,388 @@
 <%@ Import Namespace="System.Web" %>
 <%@ MasterType VirtualPath="~/Site.Master" %>
 
+<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
+
+<script type="text/javascript"language="javascript">
+var timer_is_on=0
+var tmrA
+var intX=0
+var loadingID
+var runningScript=0
+VS=0
+var showingname="a"
+var isW3C = (document.getElementById) ? true : false;
+var intNLast = -1
+
+function removePaymentMethod(x) {
+document.location.href='/CustomerInfo.aspx?rpm='+x
+}
+function addPaymentMethod(x) {
+ document.location.href = '/CustomerInfo.aspx?apm=' + x
+}
+
+function copySignInCredentials() {
+ var copySuccess = document.getElementById("SignInCredentialsSuccess")
+ var copyDiv = document.getElementById("SignInCredentialsEmailDiv")
+ var copyText = document.getElementById("SignInCredentialsEmailText")
+ copyDiv.style.visibility = "visible"
+ copyText.select()
+ document.execCommand("copy")
+ copyDiv.style.visibility = "hidden"
+ copySuccess.style.visibility="visible"
+}
+function UseLastCustomerRep(){
+ elemCINotes=(isW3C) ? document.getElementById("CINotes"):document.all("CINotes");
+ elemCICustomerRep=(isW3C) ? document.getElementById("CICustomerRep"):document.all("CICustomerRep");
+ elemCILastCustomerRep=(isW3C) ? document.getElementById("CILastCustomerRep"):document.all("CILastCustomerRep");
+ elemCICustomerRep.value=elemCILastCustomerRep.value
+ elemCINotes.focus()
+}
+function MarkAsInactive(){
+ varElem=(isW3C) ? document.getElementById("CINotes"):document.all("CINotes");
+ varElem.value="INACTIVE:  This account is no longer active, so do not use this account.  Please use this customer's active account instead."
+ UpdateCIEntry('0','0')
+}
+function UpdateCIEntry(counter,JRN){
+ if (counter.indexOf("delete") == -1 && counter!="0"){
+  varElem=(isW3C) ? document.getElementById("CIEBRep"+counter):document.all("CIEBRep"+counter);
+  if (varElem.value==""){
+   alert('Please enter the "EBRep" field.')
+   varElem.focus()
+   return
+  }
+  varElem=(isW3C) ? document.getElementById("CINotes"+counter):document.all("CINotes"+counter);
+  if (varElem.value==""){
+   alert('Please enter something in the "Notes" field.')
+   varElem.focus()
+   return
+  }
+ }
+ if (counter.indexOf("delete") != -1){
+  var r=confirm("CLICK 'OK' TO DELETE THIS ENTRY.")
+  if (r==false){
+   return false
+  }
+ }
+ elemRand=(isW3C) ? document.getElementById("JavascriptRandomNumber"):document.all("JavascriptRandomNumber");
+ varElem=(isW3C) ? document.getElementById("CICounter"):document.all("CICounter");
+ varElem.value=counter
+ varElemJRN=(isW3C) ? document.getElementById("CIJavascriptRandomNumber"):document.all("CIJavascriptRandomNumber");
+ varElemJRN.value=JRN
+ elemRand.value=Math.round(Math.random()*1000000000)
+ document.CI.submit()
+}
+function EscapeTotal(x){
+ x=escape(x)
+ while (x.indexOf("*") != -1){
+  x=x.replace("*","%2A")
+ }
+ while (x.indexOf("@") != -1){
+  x=x.replace("@","%40")
+ }
+ while (x.indexOf("-") != -1){
+  x=x.replace("-","%2D")
+ }
+ while (x.indexOf("_") != -1){
+  x=x.replace("_","%5F")
+ }
+ while (x.indexOf("+") != -1){
+  x=x.replace("+","%2B")
+ }
+ while (x.indexOf(".") != -1){
+  x=x.replace(".","%2E")
+ }
+ while (x.indexOf("/") != -1){
+  x=x.replace("/","%2F")
+ }
+ return x
+}
+function EmailErnieSavedCart(email){
+ if (window.XMLHttpRequest){
+  xmlhttp=new XMLHttpRequest()
+ }else{
+  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP")
+ }
+ xmlhttp.onreadystatechange=function(){
+  if (xmlhttp.readyState==4 && xmlhttp.status==200){
+   if (xmlhttp.responseText.indexOf("ERROR:")!=-1){
+   
+   }else{
+    alert('Email sent successfully: '+xmlhttp.responseText+' cart(s).')
+   }
+  }
+ }
+ xmlhttp.open("POST","/EmailErnieSavedCarts.aspx",true)
+ xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded")
+ xmlhttp.send("Email="+EscapeTotal(email))
+}
+function HideDiv(yy){
+ varElem=(isW3C) ? document.getElementById(yy):document.all(yy);
+ varElem.style.visibility='hidden'
+}
+function SavedRetailCarts(x){
+ var ElemX=(isW3C) ? document.getElementById('SavedRetailCartEmail'):document.all('SavedRetailCartEmail');
+ ElemX.value=x
+ document.PU.submit()
+}
+function SavedRetailCartsInput(){
+ var ElemX=(isW3C) ? document.getElementById('SavedRetailCartEmail'):document.all('SavedRetailCartEmail');
+ var ElemInput=(isW3C) ? document.getElementById('EmailInputForSavedRetailCart'):document.all('EmailInputForSavedRetailCart');
+ if(ElemInput.value==''){
+  alert('Please enter the E-mail you want to check.')
+  return
+ }
+ ElemX.value=ElemInput.value
+ document.PU.submit()
+}
+function fovs(a,q){
+ a.src = '<%=AssetsPath()%>/' + q + "l.gif"
+}
+function fous(a,q){
+ a.src = '<%=AssetsPath()%>/' + q + ".gif"
+}
+function fov(a,q){
+ a.src = '<%=AssetsPath()%>/' + q + "h.gif"
+}
+function fou(a,q){
+ a.src = '<%=AssetsPath()%>/' + q + ".gif"
+}
+
+function CountryChanged(){
+ VS=0
+ document.PU.CountryChangedTxt.value='yes'
+ document.PU.submit()
+}
+function BillingCountryChanged(){
+ VS=0
+ document.PU.BillingCountryChangedTxt.value='yes'
+ document.PU.submit()
+}
+function Validation(x){
+ if (VS==1){
+  return true
+ }
+ else if (VS==0){
+  return false
+ }
+}
+function HelpDiv(x){
+ HideHelpDivs()
+ varElemX=(isW3C) ? document.getElementById(x):document.all(x);
+ varElemX.style.visibility="visible"
+}
+function HideHelpDivs(){
+ varElemPrimaryEmailDiv=(isW3C) ? document.getElementById("PrimaryEmailDiv"):document.all("PrimaryEmailDiv");
+ varElemPrimaryEmailDiv.style.visibility="hidden"
+ varElemPrimaryPhoneDiv=(isW3C) ? document.getElementById("PrimaryPhoneDiv"):document.all("PrimaryPhoneDiv");
+ varElemPrimaryPhoneDiv.style.visibility="hidden"
+}
+function SubmitFcn() {
+ VS=1
+ document.PU.submit()
+}
+function sameAsShipping(){
+ elemS=document.getElementById('Country')
+ elemB=document.getElementById('BillingCountry')
+ if (elemS.value != elemB.value){
+  alert('Please change your "Billing Country" to '+ elemS.value + ' before clicking the "Same As Shipping" button.  Thank you.')
+  return
+ }
+ elemS=document.getElementById('FullName')
+ elemB=document.getElementById('BillingFullName')
+ elemB.value=elemS.value
+ elemS=document.getElementById('StreetAddress1')
+ elemB=document.getElementById('BillingStreetAddress1')
+ elemB.value=elemS.value
+ elemS=document.getElementById('StreetAddress2')
+ elemB=document.getElementById('BillingStreetAddress2')
+ elemB.value=elemS.value
+ elemS=document.getElementById('City')
+ elemB=document.getElementById('BillingCity')
+ elemB.value=elemS.value
+ elemS=document.getElementById('StoreName')
+ elemB=document.getElementById('BillingStoreName')
+ if (elemS){
+  elemB.value=elemS.value
+ }
+ elemS=document.getElementById('StateProvince')
+ elemB=document.getElementById('BillingStateProvince')
+ if (elemS){
+  elemB.value=elemS.value
+ }
+ elemS=document.getElementById('PostalCode')
+ elemB=document.getElementById('BillingPostalCode')
+ if (elemS){
+  elemB.value=elemS.value
+ }
+ elemS=document.getElementById('Island')
+ elemB=document.getElementById('BillingIsland')
+ if (elemS){
+  elemB.value=elemS.value
+ }
+ elemS=document.getElementById('Country')
+ elemB=document.getElementById('BillingCountry')
+ elemB.value=elemS.value
+ sch()
+}
+function sch(){
+ elem = document.getElementById('dontforgetdiv')
+ elem.style.visibility="visible"
+ elem2 = document.getElementById('divChangesSaved')
+ elem2.style.visibility = "hidden"
+ elem2.style.display = "none"
+ elem3 = document.getElementById('divChangesSavedCC')
+ elem3.style.visibility = "hidden"
+ elem3.style.display = "none"
+
+ elem.style.display="inline"
+}
+function EditCCNumber(OrderProcessChoice, ccnumber, cvv2, expmonth, expyear, intN, intCCCounter) {
+ varCreditCardDiv = document.getElementById('CreditCardDiv')
+ varCreditCardDiv.style.display = "inline"
+ varCreditCardDiv.style.visibility = "visible"
+ varCreditCardDiv = intCCCounter
+ document.getElementById('CCNumber').value = ccnumber
+ document.getElementById('txtCVV2').value = cvv2
+ document.getElementById('ExpMonth').value = expmonth
+ document.getElementById('ExpYear').value = expyear
+ document.getElementById('CCCounterTxt').value = intCCCounter
+}
+function AddNewCard() {
+ varElemCCCounter = document.getElementById('CCCounterTxt')
+ varCreditCardDiv = document.getElementById('CreditCardDiv')
+ varCreditCardDiv.style.display = "inline"
+ varCreditCardDiv.style.visibility = "visible"
+ document.getElementById('CCNumber').value = ""
+ document.getElementById('txtCVV2').value = ""
+ document.getElementById('ExpMonth').value = ""
+ document.getElementById('ExpYear').value = ""
+ document.getElementById('CCCounterTxt').value = "0"
+ document.getElementById('CCNumber').focus()
+}
+function SubmitCC() {
+ elem = document.getElementById("CCNumber")
+ if (elem.value == "") {
+  alert('Please enter your "Credit Card Number".')
+  return false
+ }
+ if (!checkCCNumber(elem.value)) {
+  alert('Please double-check the Credit Card Number you entered.  It is coming back as an invalid number.  This typically happens when the Credit Card Number is entered incorrectly.  Thank you.')
+  return false
+ }
+ elemM = document.getElementById("ExpMonth")
+ if (elemM.value == "") {
+  alert('You must enter the month of the "Expiration Date" for your credit card.  It appears you are missing the Expiration "Month"')
+  return false
+ }
+ elemY = document.getElementById("ExpYear")
+ if (elemY.value == "") {
+  alert('You must enter the year of the "Expiration Date" for your credit card.  It appears you are missing the Expiration "Year"')
+  return false
+ }
+ if (elemY.value == new Date().getFullYear()) {
+  monthselected = elemM.value.substr(0, 2)
+  if (monthselected.substr(0, 1) == "0") {
+   monthselected = monthselected.substr(1, 1)
+  }
+  if (parseInt(monthselected) <= parseInt(new Date().getMonth())) {
+   elemM.focus()
+   alert('The "Expiration Date" entered is in the past.  Please enter a valid "Expiration Date".')
+   document.getElementById('CreditCardDiv').style.visibility = "visible"
+   return false
+  }
+ }
+ elem = document.getElementById("txtCVV2")
+ if (elem.value == "") {
+  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
+  return false
+ }
+ if (elem.value.length != 3 && elem.value.length != 4) {
+  elem.focus()
+  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
+  return false
+ }
+ if (isNaN(elem.value)) {
+  elem.focus()
+  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
+  return false
+ }
+ document.frmCreditCards.submit()
+}
+function checkCCNumber(CCNumber) {
+ if (CCNumber.length < 13) {
+  return false
+ } else {
+  return true
+ }
+}
+
+function showCVV2HelpDiv() {
+ elem = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
+ elem2 = (isW3C) ? document.getElementById("txtCVV2") : (document.all("txtCVV2"));
+ elem.style.display = "inline"
+ elem.style.visibility = "visible"
+ elem2.focus()
+}
+function hideCVV2HelpDiv() {
+ elem = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
+ elem2 = (isW3C) ? document.getElementById("txtCVV2") : (document.all("txtCVV2"));
+ elem2.focus()
+ elem.style.display = "none"
+ elem.style.visibility = "hidden"
+}
+function DeleteCard(x) {
+ window.location = '/customerinfo.aspx?deletecard=' + x
+}
+function hideCreditCardDiv() {
+ elem = (isW3C) ? document.getElementById("CreditCardDiv") : (document.all("CreditCardDiv"));
+ elem2 = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
+ elem.style.display = "none"
+ elem.style.visibility = "hidden"
+ elem2.style.display = "none"
+ elem2.style.visibility = "hidden"
+}
+
+</script>
+
+<% If Session("PowerUserName") <> "" Then%>
+ <script type="text/javascript" src="/JS38/ELC.js?x=5"></script>
+<%end if%>
+
+<style type="text/css">
+ P {font-family:arial,verdana,helvetica,sans-serif;font-size:12px;color:#000000;display:inline}
+ p.pow {font-family:arial,verdana,helvetica;font-size:12px;color:#ffffff;background-color:#566BEC;min-height:20px;padding-bottom:2px;cursor:pointer}
+ p.redo {font-size:13px;color:#ff0000;background-color:#ffff00}
+ p.title {font-family:arial,verdana,helvetica,sans-serif;font-size:18px;color:#3F3F3F;font-weight:600}
+ p.p-title-2 {font-size:20px;color:#000000;font-weight:600}
+ p.use-card {font-size:20px;color:#000000;vertical-align:middle}
+ p.add-card {font-weight:600;font-size:19px;color:#1B67B7;vertical-align:middle;cursor:pointer;text-decoration:underline}
+ p.delete-card {font-size:12px;color:#333333;vertical-align:middle;text-decoration:underline;cursor:pointer}
+ input {font-family:arial,verdana,helvetica}
+  .i {color:#000000;background-color:#FFFFFF;font-size:14px;border-radius:8px;border:1px solid #96A496;height:27px;width:250;margin-left:7px;padding-left:6px}
+  .input-1 {font-size:14px;text-align:left;vertical-align:middle;border:0px;color:#000000;outline:none}
+ font {font-family:arial,verdanal,helvetica}
+  .a {font-size:14px;color:#000000}
+  .a-credit-card {font-weight:0;font-size:12px;color:000000}
+  .b {font-size:14px;background-color:#FFFF00;color:#FF0000}
+  .c {font-size:11px;color:#000000}
+  .d {font-size:11px;color:#000000}
+  .e {font-weight:600;font-size:13px;background-color:#E15677;color:#FFFFFF}
+  .h {font-weight:600;background-color:#647864;font-size:14px;color:#FFFFFF;padding-top:2px;padding-bottom:1px}
+  .j {font-size:13px;color:#000000}
+  .k {font-weight:600;text-decoration:underline;font-size:14px;color:#2A4029;padding-top:2px;padding-bottom:1px}
+ div {}
+  .q {position:absolute;left:62%;width:35%;background-color:#F5D7A0;padding:8;visibility:hidden;font: 12px verdana;border-style:solid;border-color:#D69669;border-width:4px;border-style:ridge}
+  .s {text-align:left;position:absolute;width:280;background-color:#F5D7A0;padding:8;padding-top:12px;padding-bottom:12px;visibility:hidden;font: 12px verdana;border-style:solid;border-color:#D69669;border-width:4px;border-style:ridge}
+ ul {}
+ .ul-redo {font-family:arial,verdana,helvetica,sans-serif;font-size:14px;color:#ff0000;background-color:#ffff00}
+ 
+ 
+</style>
+
+</asp:Content>
+<asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
+
 <% log_request(Request) %>
 
 <%
@@ -24,10 +406,9 @@
  End If
  Page.Title = strPageTitle
 
- 'Connection String
  Dim strConnectionStringName As String = Master.ConnectionStringName
 
- 'Name of Cart
+ Dim varServerCounter As String = ""
  Dim NameOfCart As String = Master.CartName
  Dim varPriceGroup As String = Master.PriceGroup
  Dim varServerCounter As String = ""
@@ -1791,400 +2172,9 @@
   End Using
  End If
  %>
-
 <%If varReturnToPurchase = "y" And BadInfo = 0 And Request.QueryString("ReturnToPurchase") = "" Then
   Response.Redirect("/purchase.aspx")
  End If%>
-
- %>
-
-<%If varReturnToPurchase = "y" And BadInfo = 0 And Request.QueryString("ReturnToPurchase") = "" Then
-   Response.Redirect("/purchase.aspx")
-  End If%>
-
-<asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
-
-<script type="text/javascript"language="javascript">
-var timer_is_on=0
-var tmrA
-var intX=0
-var loadingID
-var runningScript=0
-VS=0
-var showingname="a"
-var isW3C = (document.getElementById) ? true : false;
-var intNLast = -1
-
-function removePaymentMethod(x) {
-document.location.href='/CustomerInfo.aspx?rpm='+x
-}
-function addPaymentMethod(x) {
- document.location.href = '/CustomerInfo.aspx?apm=' + x
-}
-
-function copySignInCredentials() {
- var copySuccess = document.getElementById("SignInCredentialsSuccess")
- var copyDiv = document.getElementById("SignInCredentialsEmailDiv")
- var copyText = document.getElementById("SignInCredentialsEmailText")
- copyDiv.style.visibility = "visible"
- copyText.select()
- document.execCommand("copy")
- copyDiv.style.visibility = "hidden"
- copySuccess.style.visibility="visible"
-}
-function UseLastCustomerRep(){
- elemCINotes=(isW3C) ? document.getElementById("CINotes"):document.all("CINotes");
- elemCICustomerRep=(isW3C) ? document.getElementById("CICustomerRep"):document.all("CICustomerRep");
- elemCILastCustomerRep=(isW3C) ? document.getElementById("CILastCustomerRep"):document.all("CILastCustomerRep");
- elemCICustomerRep.value=elemCILastCustomerRep.value
- elemCINotes.focus()
-}
-function MarkAsInactive(){
- varElem=(isW3C) ? document.getElementById("CINotes"):document.all("CINotes");
- varElem.value="INACTIVE:  This account is no longer active, so do not use this account.  Please use this customer's active account instead."
- UpdateCIEntry('0','0')
-}
-function UpdateCIEntry(counter,JRN){
- if (counter.indexOf("delete") == -1 && counter!="0"){
-  varElem=(isW3C) ? document.getElementById("CIEBRep"+counter):document.all("CIEBRep"+counter);
-  if (varElem.value==""){
-   alert('Please enter the "EBRep" field.')
-   varElem.focus()
-   return
-  }
-  varElem=(isW3C) ? document.getElementById("CINotes"+counter):document.all("CINotes"+counter);
-  if (varElem.value==""){
-   alert('Please enter something in the "Notes" field.')
-   varElem.focus()
-   return
-  }
- }
- if (counter.indexOf("delete") != -1){
-  var r=confirm("CLICK 'OK' TO DELETE THIS ENTRY.")
-  if (r==false){
-   return false
-  }
- }
- elemRand=(isW3C) ? document.getElementById("JavascriptRandomNumber"):document.all("JavascriptRandomNumber");
- varElem=(isW3C) ? document.getElementById("CICounter"):document.all("CICounter");
- varElem.value=counter
- varElemJRN=(isW3C) ? document.getElementById("CIJavascriptRandomNumber"):document.all("CIJavascriptRandomNumber");
- varElemJRN.value=JRN
- elemRand.value=Math.round(Math.random()*1000000000)
- document.CI.submit()
-}
-function EscapeTotal(x){
- x=escape(x)
- while (x.indexOf("*") != -1){
-  x=x.replace("*","%2A")
- }
- while (x.indexOf("@") != -1){
-  x=x.replace("@","%40")
- }
- while (x.indexOf("-") != -1){
-  x=x.replace("-","%2D")
- }
- while (x.indexOf("_") != -1){
-  x=x.replace("_","%5F")
- }
- while (x.indexOf("+") != -1){
-  x=x.replace("+","%2B")
- }
- while (x.indexOf(".") != -1){
-  x=x.replace(".","%2E")
- }
- while (x.indexOf("/") != -1){
-  x=x.replace("/","%2F")
- }
- return x
-}
-function EmailErnieSavedCart(email){
- if (window.XMLHttpRequest){
-  xmlhttp=new XMLHttpRequest()
- }else{
-  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP")
- }
- xmlhttp.onreadystatechange=function(){
-  if (xmlhttp.readyState==4 && xmlhttp.status==200){
-   if (xmlhttp.responseText.indexOf("ERROR:")!=-1){
-   
-   }else{
-    alert('Email sent successfully: '+xmlhttp.responseText+' cart(s).')
-   }
-  }
- }
- xmlhttp.open("POST","/EmailErnieSavedCarts.aspx",true)
- xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded")
- xmlhttp.send("Email="+EscapeTotal(email))
-}
-function HideDiv(yy){
- varElem=(isW3C) ? document.getElementById(yy):document.all(yy);
- varElem.style.visibility='hidden'
-}
-function SavedRetailCarts(x){
- var ElemX=(isW3C) ? document.getElementById('SavedRetailCartEmail'):document.all('SavedRetailCartEmail');
- ElemX.value=x
- document.PU.submit()
-}
-function SavedRetailCartsInput(){
- var ElemX=(isW3C) ? document.getElementById('SavedRetailCartEmail'):document.all('SavedRetailCartEmail');
- var ElemInput=(isW3C) ? document.getElementById('EmailInputForSavedRetailCart'):document.all('EmailInputForSavedRetailCart');
- if(ElemInput.value==''){
-  alert('Please enter the E-mail you want to check.')
-  return
- }
- ElemX.value=ElemInput.value
- document.PU.submit()
-}
-function fovs(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "l.gif"
-}
-function fous(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
-}
-function fov(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "h.gif"
-}
-function fou(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
-}
-
-function CountryChanged(){
- VS=0
- document.PU.CountryChangedTxt.value='yes'
- document.PU.submit()
-}
-function BillingCountryChanged(){
- VS=0
- document.PU.BillingCountryChangedTxt.value='yes'
- document.PU.submit()
-}
-function Validation(x){
- if (VS==1){
-  return true
- }
- else if (VS==0){
-  return false
- }
-}
-function HelpDiv(x){
- HideHelpDivs()
- varElemX=(isW3C) ? document.getElementById(x):document.all(x);
- varElemX.style.visibility="visible"
-}
-function HideHelpDivs(){
- varElemPrimaryEmailDiv=(isW3C) ? document.getElementById("PrimaryEmailDiv"):document.all("PrimaryEmailDiv");
- varElemPrimaryEmailDiv.style.visibility="hidden"
- varElemPrimaryPhoneDiv=(isW3C) ? document.getElementById("PrimaryPhoneDiv"):document.all("PrimaryPhoneDiv");
- varElemPrimaryPhoneDiv.style.visibility="hidden"
-}
-function SubmitFcn() {
- VS=1
- document.PU.submit()
-}
-function sameAsShipping(){
- elemS=document.getElementById('Country')
- elemB=document.getElementById('BillingCountry')
- if (elemS.value != elemB.value){
-  alert('Please change your "Billing Country" to '+ elemS.value + ' before clicking the "Same As Shipping" button.  Thank you.')
-  return
- }
- elemS=document.getElementById('FullName')
- elemB=document.getElementById('BillingFullName')
- elemB.value=elemS.value
- elemS=document.getElementById('StreetAddress1')
- elemB=document.getElementById('BillingStreetAddress1')
- elemB.value=elemS.value
- elemS=document.getElementById('StreetAddress2')
- elemB=document.getElementById('BillingStreetAddress2')
- elemB.value=elemS.value
- elemS=document.getElementById('City')
- elemB=document.getElementById('BillingCity')
- elemB.value=elemS.value
- elemS=document.getElementById('StoreName')
- elemB=document.getElementById('BillingStoreName')
- if (elemS){
-  elemB.value=elemS.value
- }
- elemS=document.getElementById('StateProvince')
- elemB=document.getElementById('BillingStateProvince')
- if (elemS){
-  elemB.value=elemS.value
- }
- elemS=document.getElementById('PostalCode')
- elemB=document.getElementById('BillingPostalCode')
- if (elemS){
-  elemB.value=elemS.value
- }
- elemS=document.getElementById('Island')
- elemB=document.getElementById('BillingIsland')
- if (elemS){
-  elemB.value=elemS.value
- }
- elemS=document.getElementById('Country')
- elemB=document.getElementById('BillingCountry')
- elemB.value=elemS.value
- sch()
-}
-function sch(){
- elem = document.getElementById('dontforgetdiv')
- elem.style.visibility="visible"
- elem2 = document.getElementById('divChangesSaved')
- elem2.style.visibility = "hidden"
- elem2.style.display = "none"
- elem3 = document.getElementById('divChangesSavedCC')
- elem3.style.visibility = "hidden"
- elem3.style.display = "none"
-
- elem.style.display="inline"
-}
-function EditCCNumber(OrderProcessChoice, ccnumber, cvv2, expmonth, expyear, intN, intCCCounter) {
- varCreditCardDiv = document.getElementById('CreditCardDiv')
- varCreditCardDiv.style.display = "inline"
- varCreditCardDiv.style.visibility = "visible"
- varCreditCardDiv = intCCCounter
- document.getElementById('CCNumber').value = ccnumber
- document.getElementById('txtCVV2').value = cvv2
- document.getElementById('ExpMonth').value = expmonth
- document.getElementById('ExpYear').value = expyear
- document.getElementById('CCCounterTxt').value = intCCCounter
-}
-function AddNewCard() {
- varElemCCCounter = document.getElementById('CCCounterTxt')
- varCreditCardDiv = document.getElementById('CreditCardDiv')
- varCreditCardDiv.style.display = "inline"
- varCreditCardDiv.style.visibility = "visible"
- document.getElementById('CCNumber').value = ""
- document.getElementById('txtCVV2').value = ""
- document.getElementById('ExpMonth').value = ""
- document.getElementById('ExpYear').value = ""
- document.getElementById('CCCounterTxt').value = "0"
- document.getElementById('CCNumber').focus()
-}
-function SubmitCC() {
- elem = document.getElementById("CCNumber")
- if (elem.value == "") {
-  alert('Please enter your "Credit Card Number".')
-  return false
- }
- if (!checkCCNumber(elem.value)) {
-  alert('Please double-check the Credit Card Number you entered.  It is coming back as an invalid number.  This typically happens when the Credit Card Number is entered incorrectly.  Thank you.')
-  return false
- }
- elemM = document.getElementById("ExpMonth")
- if (elemM.value == "") {
-  alert('You must enter the month of the "Expiration Date" for your credit card.  It appears you are missing the Expiration "Month"')
-  return false
- }
- elemY = document.getElementById("ExpYear")
- if (elemY.value == "") {
-  alert('You must enter the year of the "Expiration Date" for your credit card.  It appears you are missing the Expiration "Year"')
-  return false
- }
- if (elemY.value == new Date().getFullYear()) {
-  monthselected = elemM.value.substr(0, 2)
-  if (monthselected.substr(0, 1) == "0") {
-   monthselected = monthselected.substr(1, 1)
-  }
-  if (parseInt(monthselected) <= parseInt(new Date().getMonth())) {
-   elemM.focus()
-   alert('The "Expiration Date" entered is in the past.  Please enter a valid "Expiration Date".')
-   document.getElementById('CreditCardDiv').style.visibility = "visible"
-   return false
-  }
- }
- elem = document.getElementById("txtCVV2")
- if (elem.value == "") {
-  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
-  return false
- }
- if (elem.value.length != 3 && elem.value.length != 4) {
-  elem.focus()
-  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
-  return false
- }
- if (isNaN(elem.value)) {
-  elem.focus()
-  alert('You must enter the 3 or 4 digit security code (CVV2) that is printed on your credit card. For American Express, this is a 4 digit code that is printed on the front of your credit card just above the credit card number.  For all other credit cards, it is the last 3 digits of the number that is printed on the signature panel on the back of your credit card.')
-  return false
- }
- document.frmCreditCards.submit()
-}
-function checkCCNumber(CCNumber) {
- if (CCNumber.length < 13) {
-  return false
- } else {
-  return true
- }
-}
-
-function showCVV2HelpDiv() {
- elem = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
- elem2 = (isW3C) ? document.getElementById("txtCVV2") : (document.all("txtCVV2"));
- elem.style.display = "inline"
- elem.style.visibility = "visible"
- elem2.focus()
-}
-function hideCVV2HelpDiv() {
- elem = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
- elem2 = (isW3C) ? document.getElementById("txtCVV2") : (document.all("txtCVV2"));
- elem2.focus()
- elem.style.display = "none"
- elem.style.visibility = "hidden"
-}
-function DeleteCard(x) {
- window.location = '/customerinfo.aspx?deletecard=' + x
-}
-function hideCreditCardDiv() {
- elem = (isW3C) ? document.getElementById("CreditCardDiv") : (document.all("CreditCardDiv"));
- elem2 = (isW3C) ? document.getElementById("divCVV2Help") : (document.all("divCVV2Help"));
- elem.style.display = "none"
- elem.style.visibility = "hidden"
- elem2.style.display = "none"
- elem2.style.visibility = "hidden"
-}
-
-</script>
-
-<% If Session("PowerUserName") <> "" Then%>
- <script type="text/javascript" src="/JS38/ELC.js?x=5"></script>
-<%end if%>
-
-<style type="text/css">
- P {font-family:arial,verdana,helvetica,sans-serif;font-size:12px;color:#000000;display:inline}
- p.pow {font-family:arial,verdana,helvetica;font-size:12px;color:#ffffff;background-color:#566BEC;min-height:20px;padding-bottom:2px;cursor:pointer}
- p.redo {font-size:13px;color:#ff0000;background-color:#ffff00}
- p.title {font-family:arial,verdana,helvetica,sans-serif;font-size:18px;color:#3F3F3F;font-weight:600}
- p.p-title-2 {font-size:20px;color:#000000;font-weight:600}
- p.use-card {font-size:20px;color:#000000;vertical-align:middle}
- p.add-card {font-weight:600;font-size:19px;color:#1B67B7;vertical-align:middle;cursor:pointer;text-decoration:underline}
- p.delete-card {font-size:12px;color:#333333;vertical-align:middle;text-decoration:underline;cursor:pointer}
- input {font-family:arial,verdana,helvetica}
-  .i {color:#000000;background-color:#FFFFFF;font-size:14px;border-radius:8px;border:1px solid #96A496;height:27px;width:250;margin-left:7px;padding-left:6px}
-  .input-1 {font-size:14px;text-align:left;vertical-align:middle;border:0px;color:#000000;outline:none}
- font {font-family:arial,verdanal,helvetica}
-  .a {font-size:14px;color:#000000}
-  .a-credit-card {font-weight:0;font-size:12px;color:000000}
-  .b {font-size:14px;background-color:#FFFF00;color:#FF0000}
-  .c {font-size:11px;color:#000000}
-  .d {font-size:11px;color:#000000}
-  .e {font-weight:600;font-size:13px;background-color:#E15677;color:#FFFFFF}
-  .h {font-weight:600;background-color:#647864;font-size:14px;color:#FFFFFF;padding-top:2px;padding-bottom:1px}
-  .j {font-size:13px;color:#000000}
-  .k {font-weight:600;text-decoration:underline;font-size:14px;color:#2A4029;padding-top:2px;padding-bottom:1px}
- div {}
-  .q {position:absolute;left:62%;width:35%;background-color:#F5D7A0;padding:8;visibility:hidden;font: 12px verdana;border-style:solid;border-color:#D69669;border-width:4px;border-style:ridge}
-  .s {text-align:left;position:absolute;width:280;background-color:#F5D7A0;padding:8;padding-top:12px;padding-bottom:12px;visibility:hidden;font: 12px verdana;border-style:solid;border-color:#D69669;border-width:4px;border-style:ridge}
- ul {}
- .ul-redo {font-family:arial,verdana,helvetica,sans-serif;font-size:14px;color:#ff0000;background-color:#ffff00}
- 
- 
-</style>
-
-</asp:Content>
-
-<asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
-
 <form name="PU"id="PU" onsubmit="return Validation(this)" action="/CustomerInfo.aspx" method="post">
 <input type="hidden" name="FromCustomerInfoPage"id="FromCustomerInfoPage" value="yes">
 <input type="hidden" name="CountryChangedTxt" id="CountryChangedTxt"value="no">
@@ -3430,6 +3420,5 @@ Please enter the best phone number to reach you. When we need to phone you, we'l
 </form>
 <td height="300"></td>
 </table>
-
 
 </asp:Content>
