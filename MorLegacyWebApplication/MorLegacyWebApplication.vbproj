@@ -127,6 +127,7 @@
   <ItemGroup>
     <Content Include="favicon.ico" />
     <Content Include="WholesaleAccepted.aspx" />
+    <Content Include="CustomerInfo.aspx" />
     <Content Include="AboutUs.aspx" />
     <Content Include="Country.aspx" />
     <Content Include="Global.asax" />
