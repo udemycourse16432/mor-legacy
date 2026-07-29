@@ -125,6 +125,7 @@
     <Import Include="System.Web.UI.HtmlControls" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Options.aspx" />
     <Content Include="Web.config" />
