@@ -2,6 +2,8 @@
 <%@ Import Namespace="System" %>
 <%@ Import Namespace="System.Web" %>
 
+<asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
+
 <%
     If Session("PowerUserName") <> "" Then
         If Session("StoreName") <> "" Then
@@ -13,8 +15,6 @@
         End If
     End If
 %>
-
-<asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
 
 <table cellpadding="0" cellspacing="0" border="0" align="center" bgcolor="D4DBD4" width="1250">
 <tr><td align="center">

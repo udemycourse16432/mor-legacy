@@ -2,52 +2,6 @@
 <%@ Import Namespace="System" %>
 <%@ Import Namespace="System.Web" %>
 
-<%
-    Dim varBroadcastLinkURL As String = ""
-    If (Request.QueryString("from-email") <> "" Or Request.QueryString("from-excel") <> "") And (IsNumeric(Request.QueryString("broadcast-list")) Or IsNumeric(Request.QueryString("itemid"))) Then
-        Response.Redirect("/home.aspx?" & Request.QueryString.ToString)
-    End If
-
-    Dim varContinueToPurchasePage As String = ""
-    Dim strURI As String = ""
-    If Request.QueryString("ContinueToPurchasePage") = "" Then
-        varContinueToPurchasePage = "no"
-    Else
-        varContinueToPurchasePage = "y"
-        strURI = "&ContinueToPurchasePage=y"
-    End If
-
-    Dim strLogInEmail As String = ""
-    Dim strRememberMeSignIn As String = "y"
-    Dim strRememberMeSignInChecked As String = "checked"
-
-    If Not IsNothing(Request.Cookies("RememberMeSignIn")) Then
-        If Request.Cookies("RememberMeSignIn").Value <> "" Then
-            If Request.Cookies("RememberMeSignIn").Value = "no" Then
-                strRememberMeSignInChecked = ""
-            Else
-                strLogInEmail = Request.Cookies("RememberMeSignIn").Value
-            End If
-        End If
-    End If
-    If Request.QueryString("RM") = "n" Then
-        strRememberMeSignIn = "n"
-        strRememberMeSignInChecked = ""
-    End If
-
-    Dim defaultCC As String = Request("CC")
-
-    If Session("PowerUserName") <> "" Then
-        If Session("StoreName") <> "" Then
-            Page.Title = NoQuotes(Session("StoreName"))
-        ElseIf Session("RetailCustomerName") <> "" Then
-            Page.Title = NoQuotes(Session("RetailCustomerName"))
-        Else
-            Page.Title = Session("PowerUserName")
-        End If
-    End If
-%>
-
 <asp:Content ID="HeadContent" ContentPlaceHolderID="HeadContent" runat="server">
 
 <script language="javascript" type="text/javascript">
@@ -288,6 +242,52 @@
 </asp:Content>
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
+
+<%
+    Dim varBroadcastLinkURL As String = ""
+    If (Request.QueryString("from-email") <> "" Or Request.QueryString("from-excel") <> "") And (IsNumeric(Request.QueryString("broadcast-list")) Or IsNumeric(Request.QueryString("itemid"))) Then
+        Response.Redirect("/home.aspx?" & Request.QueryString.ToString)
+    End If
+
+    Dim varContinueToPurchasePage As String = ""
+    Dim strURI As String = ""
+    If Request.QueryString("ContinueToPurchasePage") = "" Then
+        varContinueToPurchasePage = "no"
+    Else
+        varContinueToPurchasePage = "y"
+        strURI = "&ContinueToPurchasePage=y"
+    End If
+
+    Dim strLogInEmail As String = ""
+    Dim strRememberMeSignIn As String = "y"
+    Dim strRememberMeSignInChecked As String = "checked"
+
+    If Not IsNothing(Request.Cookies("RememberMeSignIn")) Then
+        If Request.Cookies("RememberMeSignIn").Value <> "" Then
+            If Request.Cookies("RememberMeSignIn").Value = "no" Then
+                strRememberMeSignInChecked = ""
+            Else
+                strLogInEmail = Request.Cookies("RememberMeSignIn").Value
+            End If
+        End If
+    End If
+    If Request.QueryString("RM") = "n" Then
+        strRememberMeSignIn = "n"
+        strRememberMeSignInChecked = ""
+    End If
+
+    Dim defaultCC As String = Request("CC")
+
+    If Session("PowerUserName") <> "" Then
+        If Session("StoreName") <> "" Then
+            Page.Title = NoQuotes(Session("StoreName"))
+        ElseIf Session("RetailCustomerName") <> "" Then
+            Page.Title = NoQuotes(Session("RetailCustomerName"))
+        Else
+            Page.Title = Session("PowerUserName")
+        End If
+    End If
+%>
 
 <table bgcolor="9BAF9B" cellpadding="0" cellspacing="0" WIDTH="1250" align="center" BORDER="0">
 <tr><td align="center" height="45" valign="top">
