@@ -1,0 +1,131 @@
+<%@ Master Language="VB" AutoEventWireup="false" CodeBehind="Site.Master.vb" Inherits="MorLegacyWebApplication.Site" %>
+<%@ Import Namespace="System" %>
+<%@ Import Namespace="System.Net" %>
+<%@ Import Namespace="System.IO" %>
+<%@ Import Namespace="System.Data.SqlClient" %>
+<%@ Import Namespace="System.Web" %>
+
+<!DOCTYPE html>
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title><%=Page.Title%></title>
+    <link rel="shortcut icon" href="favicon.ico?"/>
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon"/>
+
+    <script language="javascript" type="text/javascript">
+    VS = 0
+    function FFV(){
+        if (VS==0) {
+            return false;
+        }
+        else if (VS==3){
+            document.TT.TabH.value="Cart"
+            return true
+        }
+        else if (VS==31){
+            document.TT.action="Options.aspx"
+            return true
+        }
+        else if (VS==32){
+            document.TT.action="AboutUs.aspx"
+            return true
+        }
+        else if (VS==33){
+            document.TT.action="HelpFrequently.aspx"
+            return true
+        }
+        else if (VS==34){
+            document.TT.action="Links.aspx"
+            return true
+        }
+        else if (VS==35){
+            document.TT.action="Wholesale.aspx"
+            return true
+        }
+    }
+    function fovs(a,q){
+        a.src = '<%=AssetsPath()%>/' + q + "l.gif"
+    }
+    function fous(a,q){
+        a.src = '<%=AssetsPath()%>/' + q + ".gif"
+    }
+    </script>
+
+    <style type="text/css">
+    P {font-family:arial,verdana,helvetica,sans-serif;font-size:12px;color:#000000;display:inline}
+    p.pow {font-family:verdana,arial,helvetica;font-size:12px;color:#ffffff;background-color:#566BEC;min-height:20px;padding-bottom:2px;cursor:pointer}
+    input {font-family:Arial,Verdana,helvetica,sans-serif;font-size:13px;outline:none}
+    a {font-family:arial,verdana,helvetica;border:0px;text-decoration:none}
+    font {font-family:verdana,arial,helvetica}
+    </style>
+
+    <asp:ContentPlaceHolder ID="HeadContent" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+
+<body leftmargin="0" rightmargin="0" link="000000" alink="000000" vlink="000000" bgcolor="000000">
+
+<table bgcolor="000000" bordercolorlight="879B87" bordercolordark="D4DBD4" cellpadding="0" cellspacing="0" width="1250" align="center" BORDER="0">
+<tr valign="bottom">
+<td width="216" height="32" align="center" valign="bottom">
+<div style="position:absolute;width:216px;margin-left:-4px;margin-top:1px;cursor:pointer" onclick="window.location='/home.aspx'">
+<img alt="" title="Click here to return to our Home page" onclick="window.location='/home.aspx'" style="border:0px;margin-top:3px;cursor:pointer" onmouseover="fovs(this,'millions-of-records-logo2')" onmouseout="fous(this,'millions-of-records-logo2')" src="<%=AssetsPath()%>/millions-of-records-logo2.gif" id="image7" name="image7">
+</div>
+<img alt="" src="<%=AssetsPath()%>/logo-background3.gif"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/home12.gif" onmouseover="fovs(this,'home12')" onmouseout="fous(this,'home12')" style="cursor:pointer" onclick="window.location='/home.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/youraccount.gif" style="cursor:pointer" onmouseover="fovs(this,'youraccount')" onmouseout="fous(this,'youraccount')" onclick="window.location='/CustomerInfo.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/yourorders.gif" style="cursor:pointer" onmouseover="fovs(this,'yourorders')" onmouseout="fous(this,'yourorders')" onclick="window.location='/CustomerOrders.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/shipping8.gif" style="cursor:pointer" onmouseover="fovs(this,'shipping8')" onmouseout="fous(this,'shipping8')" onclick="window.location='/HelpShipping.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/csr.gif" style="cursor:pointer" onmouseover="fovs(this,'csr')" onmouseout="fous(this,'csr')" onclick="window.location='/HelpFrequently.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/wholesale5.gif" style="cursor:pointer" onmouseover="fovs(this,'wholesale5')" onmouseout="fous(this,'wholesale5')" onclick="window.location='/Wholesale.aspx'"></td>
+<td><img alt border="0" src="<%=AssetsPath()%>/aboutus5<% If Request.FilePath.EndsWith("AboutUs.aspx") Then %>h<% End If %>.gif" style="cursor:pointer" onclick="window.location='/AboutUs.aspx'"></td>
+</td><td width="196" align="right" valign="bottom">
+<img alt border="0" src="<%=AssetsPath()%>/create-account3.gif" onmouseover="fovs(this,'create-account3')" onmouseout="fous(this,'create-account3')" style="cursor:pointer;margin-bottom:3px" onclick="window.location='/Options.aspx'">
+</td><td width="95" align="right" valign="bottom">
+<img alt border="0" src="<%=AssetsPath()%>/cart-upper-right3.gif" onmouseover="fovs(this,'cart-upper-right3')" onmouseout="fous(this,'cart-upper-right3')" style="cursor:pointer;margin-bottom:3px" onclick="window.location='/home.aspx?TabH=Cart'">
+</td><td width="95" align="right" valign="bottom">
+<% If Session("PowerUserName") = "" And Session("CustomerID") <> "" Then%>
+<img alt border="0" src="<%=AssetsPath()%>/sign-out-upper-right3.gif" onmouseover="fovs(this,'sign-out-upper-right3')" onmouseout="fous(this,'sign-out-upper-right3')" style="cursor:pointer;margin-bottom:3px" onclick="window.location='/SignOut.aspx'">
+<% Else%>
+<img alt border="0" src="<%=AssetsPath()%>/sign-in-upper-right3.gif" onmouseover="fovs(this,'sign-in-upper-right3')" onmouseout="fous(this,'sign-in-upper-right3')" style="cursor:pointer;margin-bottom:3px" onclick="window.location='/Options.aspx'">
+<%end if%>
+</td><td width="3">
+</td></tr>
+</table>
+
+<table bordercolorlight="9BAF9B" cellpadding="0" cellspacing="0" WIDTH="1250" align="center" BORDER="0">
+<tr><td bgcolor="9BAF9B" width="3%"></td><td bgcolor="9BAF9B" width="97%"></td>
+<td width="3%"><img alt src="<%=AssetsPath()%>/tabletopright.gif" WIDTH="33" HEIGHT="7"></td>
+</tr></table>
+
+<table cellpadding="0" cellspacing="0" align="center" bgcolor="9BAF9B" width="1250">
+<td align="center" height="45" valign="top">
+<% If Session("PowerUserName") <> "" Then%>
+<p class="pow" style="background-color:#9BFFF9;color:#000000" onclick="window.location='/Wholesale.aspx'">&nbsp;&nbsp;<%=Session("PowerUserName")%>&nbsp;&nbsp;</p>
+<% If Session("CustomerServerCounter") <> "" Then%>
+<p class="pow" style="background-color:#FFff00;color:#000000" onclick="window.location='/CustomerInfo.aspx'">&nbsp;&nbsp;<%=Left(Session("StoreName"), 40)%>&nbsp;</p>
+<% End If%>
+<p class="pow" style="background-color:#ffffff;color:#000000;cursor:default">&nbsp;&nbsp;<%=PriceGroup%>&nbsp;</p>
+<%Else
+    If Session("CustomerID") <> "" Then%>
+    <div style="cursor:pointer;position:absolute;display:block;width:180px;height:29px;margin-left:1060px;margin-top:-6px;padding-top:11px;vertical-align:top;text-align:center;background-image:url('<%=AssetsPath()%>/log-in-name-bg2.gif');background-repeat:no-repeat" title="Click here to see your customer profile (shipping address, etc.)" onclick="window.location='/CustomerInfo.aspx'">
+    <p style="vertical-align:top;text-align:center;font-size:13px;font-family:arial"><%=FigureSignedInName(Session("StoreName"))%></p>
+    </div>
+<%End If
+End If%>
+</td></table>
+
+<asp:ContentPlaceHolder ID="BodyContent" runat="server">
+</asp:ContentPlaceHolder>
+
+<table cellpadding="0" cellspacing="0" WIDTH="1250" align="center" BORDER="0">
+<td width="8"><img alt src="<%=AssetsPath()%>/tbld.gif" WIDTH="8" HEIGHT="7"></td>
+<td bgcolor="D4DBD4" width="99%"></td>
+<td width="8"><img alt src="<%=AssetsPath()%>/tbrd.gif" WIDTH="8" HEIGHT="7"></td>
+</table>
+<table cellpadding="0" cellspacing="0" width="1250" align="center" BORDER="0">
+<tr><td align="center"><font face="arial" style="font-size:13px" color="ffffff"><%=CopyrightFooter()%></font>
+</td></tr></table>
+
+</body>
+</html>
