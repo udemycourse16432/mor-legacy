@@ -140,12 +140,6 @@ function SavedRetailCartsInput(){
  ElemX.value=ElemInput.value
  document.PU.submit()
 }
-function fovs(a,q){
- a.src = '<%=AssetsPath()%>/' + q + "l.gif"
-}
-function fous(a,q){
- a.src = '<%=AssetsPath()%>/' + q + ".gif"
-}
 function fov(a,q){
  a.src = '<%=AssetsPath()%>/' + q + "h.gif"
 }
@@ -2179,23 +2173,6 @@ function hideCreditCardDiv() {
  <input type="hidden" name="CheckedPostalCode"id="CheckedPostalCode" value="no">
 <%end if%>
 
-<table cellpadding="0" cellspacing="0" align="center" bgcolor="9BAF9B" width="1250">
-<td align="center"height="30"valign="top">
-<%'PowerUserName and StoreName at top of screen
- If Session("PowerUserName") <> "" Then%>
- <p class="pow"style="background-color:#9BFFF9;color:#000000"onclick="window.location='/Wholesale.aspx'">&nbsp;&nbsp;<%=Session("PowerUserName")%>&nbsp;&nbsp;</p>
- <% If Session("CustomerServerCounter") <> "" Then%>
-  <p class="pow"style="background-color:#FFff00;color:#000000"onclick="window.location='/CustomerInfo.aspx'">&nbsp;&nbsp;<%=Left(Session("StoreName"), 40)%>&nbsp;</p>
- <% End If%>
- <p class="pow"style="background-color:#ffffff;color:#000000;cursor:default">&nbsp;&nbsp;<%=varPriceGroup%>&nbsp;</p>
- <%Else
-    If Session("CustomerID") <> "" Then%>
-     <div style="cursor:pointer;position:absolute;display:block;width:180px;height:29px;margin-left:1060px;margin-top:-6px;padding-top:11px;vertical-align:top;text-align:center;background-image:url('<%=AssetsPath()%>/log-in-name-bg2.gif');background-repeat:no-repeat"title="Click here to see your customer profile (shipping address, etc.)"onclick="window.location='/CustomerInfo.aspx'">
-     <p style="vertical-align:top;text-align:center;font-size:13px;font-family:arial"><%=FigureSignedInName(Session("StoreName"))%></p>
-     </div>
-  <%End If
-   End If%>
-</td><td align="left"width="156">
 <%'Customer Login Data
  If Session("PowerUserName") <> "" And Session("CustomerServerCounter") <> "" Then%>
  <div style="margin-left:-265px;border-radius:11px;border:1px solid #A5A5A3;margin-top:27px;width:400px;padding:5px;padding-left:8px;position:absolute;text-align:left;background-color:#FAFAFA">
