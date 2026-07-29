@@ -1,6 +1,5 @@
 ﻿Imports System.Configuration
 Imports System.IO
-Imports System.ServiceModel.MsmqIntegration
 Imports MimeKit
 Imports MailKit
 Imports MailKit.Net.Smtp

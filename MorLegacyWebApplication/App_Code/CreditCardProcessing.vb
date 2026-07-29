@@ -490,7 +490,7 @@ Public Module CreditCardProcessing
         postReq.KeepAlive = True
 
         postReq.ContentType = "application/x-www-form-urlencoded"
-        postReq.UserAgent = "Mozill<%=AssetsPath()%>/5.0 (Windows; U; Windows NT 6.1; ru; rv:1.9.2.3) Gecko/20100401 Firefox/4.0 (.NET CLR 3.5.30729)"
+        postReq.UserAgent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; ru; rv:1.9.2.3) Gecko/20100401 Firefox/4.0 (.NET CLR 3.5.30729)"
         postReq.ContentLength = byteData.Length
 
         Dim postreqstream As Stream = postReq.GetRequestStream()

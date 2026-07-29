@@ -130,13 +130,13 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Code\MyFunctions.vb" />
-    <Content Include="App_Code\logs.vb" />
-    <Content Include="App_Code\ip_filter.vb" />
-    <Content Include="App_Code\ErrorHandling.vb" />
-    <Content Include="App_Code\Encryption.vb" />
-    <Content Include="App_Code\email.vb" />
-    <Content Include="App_Code\CreditCardProcessing.vb" />
+    <Compile Include="App_Code\MyFunctions.vb" />
+    <Compile Include="App_Code\logs.vb" />
+    <Compile Include="App_Code\ip_filter.vb" />
+    <Compile Include="App_Code\ErrorHandling.vb" />
+    <Compile Include="App_Code\Encryption.vb" />
+    <Compile Include="App_Code\email.vb" />
+    <Compile Include="App_Code\CreditCardProcessing.vb" />
     <Compile Include="Global.asax.vb">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -158,13 +158,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <Compile Include="Options.aspx.designer.vb">
-      <DependentUpon>Options.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="Options.aspx.vb">
-      <DependentUpon>Options.aspx</DependentUpon>
-      <SubType>ASPXCodebehind</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
