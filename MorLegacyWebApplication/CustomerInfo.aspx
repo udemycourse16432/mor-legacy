@@ -745,10 +745,10 @@ function hideCreditCardDiv() {
     Using conn2 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
      SqlConnection.ClearPool(conn2)
      conn2.Open()
-     Dim CMD_D As New SqlCommand("spInsertStoreLogOnAccessedUnsuccessful", conn2)
-     CMD_D.CommandType = Data.CommandType.StoredProcedure
-     CMD_D.Parameters.AddWithValue("@DateTime", Date.Now)
-     CMD_D.Parameters.AddWithValue("@IPAddress", Request.ServerVariables("HTTP_X_FORWARDED_FOR"))
+      Dim CMD_D As New SqlCommand("spInsertStoreLogOnAccessedUnsuccessful", conn2)
+      CMD_D.CommandType = Data.CommandType.StoredProcedure
+      CMD_D.Parameters.AddWithValue("@DateTime", Date.Now)
+      CMD_D.Parameters.AddWithValue("@IPAddress", IsSomething(Left(Request.ServerVariables("HTTP_X_FORWARDED_FOR"), 50), DBNull.Value))
      CMD_D.Parameters.AddWithValue("@LoggedOnSuccessful", "no")
      CMD_D.Parameters.AddWithValue("@Password", IsSomething(Request("Pword"), DBNull.Value))
      CMD_D.Parameters.AddWithValue("@LogInEmail", IsSomething(Request("LogInEmail"), DBNull.Value))
