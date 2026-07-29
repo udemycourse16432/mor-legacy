@@ -209,1025 +209,1032 @@ function fcnDoNotEmailSignInCredentials(){
 
 <asp:Content ID="BodyContent" ContentPlaceHolderID="BodyContent" runat="server">
 <%
- log_request(Request)
+    log_request(Request)
 
- Dim strConnectionStringName As String = ""
- If Context.IsDebuggingEnabled OrElse Request.ServerVariables("HTTP_X_FORWARDED_FOR") = "1.1.1.27" then
-  strConnectionStringName = "MillionsOfRecordsConnectionStringDevelopment"
- Else
-  strConnectionStringName = "MillionsOfRecordsConnectionStringProduction"
- End If
-
- Dim varServerCounter As String = ""
- Dim NameOfCart As String = ""
- Dim varPriceGroup As String = ""
- If Session("StoreName") <> "" Then
-  varServerCounter = Session("CustomerServerCounter")
-  NameOfCart = "W_CART_" & varServerCounter
-  varPriceGroup = Session("PriceGroup")
- Else
-  NameOfCart = "CART" & Session.SessionID & Session("CartRandomNumbersExtension")
-  varPriceGroup = "RetailPrice"
- End If
-
- Dim varChecked As string="checked"
-
- 'Wholesale or Retail
- Dim varWholesaleOrRetail As String = Request("WholesaleOrRetailTxt")
- If varWholesaleOrRetail = "" Or varWholesaleOrRetail = "retail" Then
-  varWholesaleOrRetail = "retail"
-  varPriceGroup = "RetailPrice"
- Else
-  varWholesaleOrRetail = "wholesale"
-  varPriceGroup = "StorePrice"
- End If
- 'Check for items in cart
- Dim varItemsInCart As Integer = 0
- Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-  SqlConnection.ClearPool(conn)
-  conn.Open()
-  Dim CMD_X As New SqlCommand("CartNumberOfItems", conn)
-  CMD_X.CommandType = Data.CommandType.StoredProcedure
-  CMD_X.Parameters.AddWithValue("@CartName", NameOfCart)
-  CMD_X.ExecuteScalar()
-  If Not IsDBNull(CMD_X) Then
-   varItemsInCart = 1
-  End If
- End Using
- 'Country
- Dim defaultCountry As String = ""
- Dim defaultBillingCountry As String = ""
- Dim varCountryListCity As String = ""
- Dim varCountryListStateProvince As String = ""
- Dim defaultCountryListCounter As Integer = 0
- Dim varBillingCountryListCity As String = ""
- Dim varBillingCountryListStateProvince As String = ""
- Dim defaultBillingCountryListCounter As Integer = 0
- If Not IsNumeric(Request("CountryListCode")) And Request("CountryChangedTxt") <> "yes" And Request("BillingCountryChangedTxt") <> "yes" And Request("Country") = "" Then
-  Response.Redirect("/Options.aspx")
- End If
- If Request("CountryListCode") <> "" And Request("CountryChangedTxt") <> "yes" And Request("BillingCountryChangedTxt") <> "yes" Then
-  Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-   SqlConnection.ClearPool(conn)
-   conn.Open()
-   Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
-   CMD_X.CommandType = Data.CommandType.StoredProcedure
-   CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("CountryListCode"), 0))
-   Dim readerX As SqlDataReader
-   readerX = CMD_X.ExecuteReader
-   If Not readerX.HasRows Then
-    Response.Redirect("/Options.aspx")
-   Else
-    readerX.Read()
-   End If
-   defaultCountry = readerX("Country")
-   defaultBillingCountry = readerX("Country")
-   varCountryListCity = IsDBSomething(readerX("City"), "")
-   varCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
-   defaultCountryListCounter = readerX("counter")
-   defaultBillingCountry = readerX("Country")
-   varBillingCountryListCity = IsDBSomething(readerX("City"), "")
-   varBillingCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
-   defaultBillingCountryListCounter = readerX("counter")
-  End Using
- Else
-  Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-   SqlConnection.ClearPool(conn)
-   conn.Open()
-   Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
-   CMD_X.CommandType = Data.CommandType.StoredProcedure
-   CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("Country"), 0))
-   Dim readerX As SqlDataReader
-   readerX = CMD_X.ExecuteReader
-   If Not readerX.HasRows Then
-    Response.Redirect("/Options.aspx")
-   Else
-    readerX.Read()
-   End If
-   defaultCountry = readerX("Country")
-   varCountryListCity = IsDBSomething(readerX("City"), "")
-   varCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
-   defaultCountryListCounter = readerX("counter")
-  End Using
-  If Request("BillingCountry") <> "" Then
-   Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-    SqlConnection.ClearPool(conn)
-    conn.Open()
-    Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
-    CMD_X.CommandType = Data.CommandType.StoredProcedure
-    CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("BillingCountry"), 0))
-    Dim readerX As SqlDataReader
-    readerX = CMD_X.ExecuteReader
-    If Not readerX.HasRows Then
-     Response.Redirect("/Options.aspx")
+    Dim strConnectionStringName As String = ""
+    If Context.IsDebuggingEnabled OrElse Request.ServerVariables("HTTP_X_FORWARDED_FOR") = "1.1.1.27" then
+        strConnectionStringName = "MillionsOfRecordsConnectionStringDevelopment"
     Else
-     readerX.Read()
+        strConnectionStringName = "MillionsOfRecordsConnectionStringProduction"
     End If
-    defaultBillingCountry = readerX("Country")
-    varBillingCountryListCity = IsDBSomething(readerX("City"), "")
-    varBillingCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
-    defaultBillingCountryListCounter = readerX("counter")
-   End Using
-  End If
- End If
 
- 'WebCountryShippingZonesT
- Dim varPostalCodeRequired As String = ""
- Dim varStateProvinceRequired As String = ""
- Dim varCityRequired As String = ""
- Dim varIslandRequired As String = ""
- Dim varStateProvinceWord As String = ""
- Dim varIslandWord As String = ""
- Dim varPostalCodeWord As String = ""
- Dim varCityWord As String = ""
- Dim varFullPostalCodeFormat As String = ""
- Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-  SqlConnection.ClearPool(conn)
-  conn.Open()
-  Dim CMD_X As New SqlCommand("spGetWebCountryShippingZonesTRow", conn)
-  CMD_X.CommandType = Data.CommandType.StoredProcedure
-  CMD_X.Parameters.AddWithValue("@Country", defaultCountry)
-  Dim readerX As SqlDataReader
-  readerX = CMD_X.ExecuteReader
-  readerX.Read()
-  varPostalCodeRequired = IsDBSomething(readerX("PostalCodeRequired"), "")
-  varStateProvinceRequired = IsDBSomething(readerX("StateProvinceRequired"), "")
-  varCityRequired = IsDBSomething(readerX("CityRequired"), "")
-  varIslandRequired = IsDBSomething(readerX("IslandRequired"), "")
-  varStateProvinceWord = IsDBSomething(readerX("StateProvinceWord"), "")
-  varIslandWord = IsDBSomething(readerX("IslandWord"), "")
-  varPostalCodeWord = IsDBSomething(readerX("PostalCodeWord"), "")
-  varCityWord = IsDBSomething(readerX("CityWord"), "")
-  varFullPostalCodeFormat = IsDBSomething(readerX("PostalCodeFormat"), "")
- End Using
- 'WebBillingCountryShippingZonesT
- Dim varBillingPostalCodeRequired As String = ""
- Dim varBillingStateProvinceRequired As String = ""
- Dim varBillingCityRequired As String = ""
- Dim varBillingIslandRequired As String = ""
- Dim varBillingStateProvinceWord As String = ""
- Dim varBillingIslandWord As String = ""
- Dim varBillingPostalCodeWord As String = ""
- Dim varBillingCityWord As String = ""
- Dim varBillingFullPostalCodeFormat As String = ""
- If defaultBillingCountry <> "" Then
-  Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-   SqlConnection.ClearPool(conn)
-   conn.Open()
-   Dim CMD_X As New SqlCommand("spGetWebCountryShippingZonesTRow", conn)
-   CMD_X.CommandType = Data.CommandType.StoredProcedure
-   CMD_X.Parameters.AddWithValue("@Country", defaultBillingCountry)
-   Dim readerX As SqlDataReader
-   readerX = CMD_X.ExecuteReader
-   If Not readerX.HasRows Then
-    Response.Redirect("/home.aspx")
-   End If
-   readerX.Read()
-   varBillingPostalCodeRequired = IsDBSomething(readerX("PostalCodeRequired"), "")
-   varBillingStateProvinceRequired = IsDBSomething(readerX("StateProvinceRequired"), "")
-   varBillingCityRequired = IsDBSomething(readerX("CityRequired"), "")
-   varBillingIslandRequired = IsDBSomething(readerX("IslandRequired"), "")
-   varBillingStateProvinceWord = IsDBSomething(readerX("StateProvinceWord"), "")
-   varBillingIslandWord = IsDBSomething(readerX("IslandWord"), "")
-   varBillingPostalCodeWord = IsDBSomething(readerX("PostalCodeWord"), "")
-   varBillingCityWord = IsDBSomething(readerX("CityWord"), "")
-   varBillingFullPostalCodeFormat = IsDBSomething(readerX("PostalCodeFormat"), "")
-  End Using
- End If
-
- 'WebCountryStateProvincesList
- Dim varStateProvinceList As String = ""
- Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-  SqlConnection.ClearPool(conn)
-  conn.Open()
-  Dim CMD_X As New SqlCommand("spGetCountOfWebCountryStateProvinces", conn)
-  CMD_X.CommandType = Data.CommandType.StoredProcedure
-  CMD_X.Parameters.AddWithValue("@Country", defaultCountry)
-  Dim readerX As SqlDataReader
-  readerX = CMD_X.ExecuteReader
-  readerX.Read()
-  If readerX("ccc") = 0 Then
-   varStateProvinceList = "n"
-  Else
-   varStateProvinceList = "y"
-  End If
- End Using
- 'WebBillingCountryStateProvincesList
- Dim varBillingStateProvinceList As String = ""
- If defaultBillingCountry <> "" Then
-  Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-   SqlConnection.ClearPool(conn)
-   conn.Open()
-   Dim CMD_X As New SqlCommand("spGetCountOfWebCountryStateProvinces", conn)
-   CMD_X.CommandType = Data.CommandType.StoredProcedure
-   CMD_X.Parameters.AddWithValue("@Country", defaultBillingCountry)
-   Dim readerX As SqlDataReader
-   readerX = CMD_X.ExecuteReader
-   readerX.Read()
-   If readerX("ccc") = 0 Then
-    varBillingStateProvinceList = "n"
-   Else
-    varBillingStateProvinceList = "y"
-   End If
-  End Using
- End If
- 'Email Sign-In Credentials
- Dim strDoNotEmailSignInCredentialsChecked As String = ""
- Dim strDoNotEmailSignInCredentials As String = "n"
- If Request("txtDoNotEmailSignInCredentials") = "y" Then
-  strDoNotEmailSignInCredentialsChecked = "checked"
-  strDoNotEmailSignInCredentials = "y"
- End If
-
- Dim RetryNewCustomer As Integer = 0
- Dim FullNameMessage As String = ""
- Dim DefaultFullName As String = ""
- Dim StreetAddress1Message As String = ""
- Dim DefaultStreetAddress1 As String = ""
- Dim DefaultStreetAddress2 As String = ""
- Dim CityMessage As String = ""
- Dim DefaultCity As String = ""
- Dim StateProvinceMessage As String = ""
- Dim DefaultStateProvince As String = ""
- Dim varGetPostalCodeForCityText As String = ""
- Dim varValidZip As String = ""
- Dim strsq1 As String = ""
- Dim varCountryUSA As String = ""
- Dim varValidCAPostalCode As String = ""
- Dim varIsValidPostalCode As String = ""
- Dim PostalCodeMessage As String = ""
- Dim DefaultPostalCode As String = ""
- Dim varCheckedPostalCode As Integer = 0
- Dim varRequiredFormat As String = ""
- Dim varPostalCodeFormat As String = ""
- Dim varPostalCode As String = ""
- Dim x30 As String = ""
- Dim xx10 As Integer = 0
- Dim varSmallO As Integer = 0
- Dim varSmallOPosition As Integer = 0
- Dim varCustomerPostalCodeFormat As String = ""
- Dim varCustomerPostalCode As String = ""
- Dim x10 As String = ""
- Dim strSql As String = ""
- Dim IslandMessage As String = ""
- Dim DefaultIsland As String = ""
- Dim BillingFullNameMessage As String = ""
- Dim DefaultBillingFullName As String = ""
- Dim BillingStreetAddress1Message As String = ""
- Dim DefaultBillingStreetAddress1 As String = ""
- Dim DefaultBillingStreetAddress2 As String = ""
- Dim BillingCityMessage As String = ""
- Dim DefaultBillingCity As String = ""
- Dim BillingStateProvinceMessage As String = ""
- Dim DefaultBillingStateProvince As String = ""
- Dim BillingPostalCodeMessage As String = ""
- Dim DefaultBillingPostalCode As String = ""
- Dim varCheckedBillingPostalCode As Integer = 0
- Dim BillingIslandMessage As String = ""
- Dim DefaultBillingIsland As String = ""
- Dim PhoneMessage As String = ""
- Dim DefaultPhone As String = ""
- Dim EmailMessage As String = ""
- Dim DefaultEmail As String = ""
- Dim DefaultResidentialDelivery As String = ""
- Dim ResidentialDeliveryMessage As String = ""
- Dim DefaultChargeSalesTax As String = ""
- Dim ChargeSalesTaxMessage As String = ""
- Dim PwordMessage As String = ""
- Dim DefaultPword As String = ""
- Dim cc As Integer = 0
- Dim DefaultOther As String = ""
- Dim phoneycustomerid As Integer = 0
- Dim varNewCustomerID As String = ""
- Dim varNewCustomerCounter As Integer = 0
- Dim RetailNameOfCart As String = ""
- Dim WholesaleNameOfCart As String = ""
- Dim varSaleItem As Integer = 0
- Dim LogInPrice As Double = 0
- Dim varGetPostalCodeForCity As String = ""
- Dim varEmailBody As String = ""
-
- 'Continue To Purchase Page Variable
- Dim varContinueToPurchasePage As String = ""
- If Request.QueryString("ContinueToPurchasePage") = "y" Or Request("ContinueToPurchasePage") = "y" Then
-  varContinueToPurchasePage = "y"
- Else
-  varContinueToPurchasePage = "no"
- End If
-
- 'From This Page--------------------------------------------------------------------------------------
- If Request("NewCustomer") = "yes" Then
-  RetryNewCustomer = 0
-  'Check FullName
-  FullNameMessage = ""
-  DefaultFullName = CapFirstLetter(SanitizeNameAndAddress(Request("FullName")))
-  If DefaultFullName = "" Then
-   RetryNewCustomer = 1
-   FullNameMessage = "Please enter your Full Name."
-  End If
-  'Check Street Address Line 1
-  StreetAddress1Message = ""
-  DefaultStreetAddress1 = CapFirstLetter(SanitizeNameAndAddress(Request("StreetAddress1")))
-  If DefaultStreetAddress1 = "" Then
-   RetryNewCustomer = 1
-   StreetAddress1Message = "Please enter your Street Address Line 1."
-  End If
-  'Street Address Line 2
-  DefaultStreetAddress2 = SanitizeNameAndAddress(Request("StreetAddress2"))
-  'Check City
-  CityMessage = ""
-  DefaultCity = CapFirstLetter(SanitizeNameAndAddress(Request("City")))
-  If varCityRequired = "y" Then
-   If DefaultCity = "" Then
-    RetryNewCustomer = 1
-    CityMessage = "Please enter your " & varCityWord & "."
-   End If
-  End If
-  'Check StateProvince
-  StateProvinceMessage = ""
-  DefaultStateProvince = CapFirstLetter(SanitizeNameAndAddress(Request("StateProvince")))
-  If varStateProvinceRequired = "y" Then
-   If DefaultStateProvince = "" Then
-    RetryNewCustomer = 1
-    StateProvinceMessage = "Please enter your " & varStateProvinceWord & "."
-   End If
-  End If
-  'Check PostalCode
-  If varPostalCodeRequired <> "n" Then
-   varGetPostalCodeForCityText = Request("GetPostalCodeForCity")
-   varValidZip = Request("PostalCodeName")
-   strsq1 = Left(varGetPostalCodeForCityText, 100)
-   varCountryUSA = Left(Request(varValidZip), 3)
-   varValidCAPostalCode = Mid(Request(varValidZip), 4, 5)
-   varIsValidPostalCode = Right(Request(varValidZip), 5)
-   PostalCodeMessage = ""
-   DefaultPostalCode = fixtext(Request("PostalCode"))
-   If varPostalCodeRequired = "y" Then
-    varCheckedPostalCode = 0
-    If DefaultPostalCode = "" Then
-     RetryNewCustomer = 1
-     PostalCodeMessage = "You did Not enter your " & varPostalCodeWord & "."
-    ElseIf Len(varFullPostalCodeFormat) > 0 Then
-     varRequiredFormat = UCase(Left(varFullPostalCodeFormat, 1))
-     'Get PostalCodeFormat To n & L Characters
-     varPostalCodeFormat = ""
-     varPostalCode = Right(varFullPostalCodeFormat, Len(varFullPostalCodeFormat) - 1)
-     For n30 = 1 To Len(varPostalCode)
-      x30 = Mid(varPostalCode, n30, 1)
-      If Mid(varPostalCode, n30, 1) = "n" Or Mid(varPostalCode, n30, 1) = "L" Then
-       varPostalCodeFormat = varPostalCodeFormat & Mid(varPostalCode, n30, 1)
-      End If
-     Next
-     'Get Customer PostalCode To n & L Characters
-     xx10 = 0
-     varSmallO = 0
-     varSmallOPosition = 0
-     varCustomerPostalCodeFormat = ""
-     varCustomerPostalCode = UCase(DefaultPostalCode)
-     For n10 = 1 To Len(varCustomerPostalCode)
-      x10 = Mid(varCustomerPostalCode, n10, 1)
-      If Asc(x10) >= 65 And Asc(x10) <= 90 Then
-       xx10 = xx10 + 1
-       varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "L"
-       If Asc(x10) = 79 Then
-        varSmallO = 1
-        varSmallOPosition = xx10
-       End If
-      ElseIf Asc(x10) >= 48 And Asc(x10) <= 57 Then
-       xx10 = xx10 + 1
-       varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "n"
-      End If
-     Next
-     'Check For Correct Length
-     If Len(varCustomerPostalCodeFormat) <> Len(varPostalCodeFormat) Then
-      If InStr(1, varPostalCodeFormat, "L") > 0 Then
-       If varRequiredFormat = "R" Then
-        RetryNewCustomer = 1
-        PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  It should be a combination Of " & Len(varPostalCodeFormat) & " letters And numbers."
-       Else
-        If Request("CheckedPostalCode") = "no" Then
-         varCheckedPostalCode = 1
-         RetryNewCustomer = 1
-         PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it Is correct Then ignore this message And submit your information again."
-        End If
-       End If
-      Else
-       If varRequiredFormat = "R" Then
-        RetryNewCustomer = 1
-        PostalCodeMessage = "Your " & varPostalCodeWord & " needs To be " & Len(varPostalCodeFormat) & " numbers Long (no letters)."
-       Else
-        If Request("CheckedPostalCode") = "no" Then
-         varCheckedPostalCode = 1
-         RetryNewCustomer = 1
-         PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it Is correct Then ignore this message And submit your information again."
-        End If
-       End If
-      End If
-     End If
-     'Check For Small O Instead Of A Zero
-     If PostalCodeMessage = "" Then
-      If varSmallO = 1 Then
-       If Mid(varPostalCodeFormat, varSmallOPosition, 1) <> "L" Then
-        If varRequiredFormat = "R" Then
-         RetryNewCustomer = 1
-         PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  There Is a letter 'O' where a number should be (maybe the number zero?)."
-        Else
-         If Request("CheckedPostalCode") = "no" Then
-          varCheckedPostalCode = 1
-          RetryNewCustomer = 1
-          PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-         End If
-        End If
-       End If
-      End If
-     End If
-     'Check For Numbers and Letters Where They Should Be
-     If PostalCodeMessage = "" Then
-      For n20 = 1 To Len(varPostalCodeFormat)
-       If Mid(varPostalCodeFormat, n20, 1) <> Mid(varCustomerPostalCodeFormat, n20, 1) Then
-        If InStr(1, varPostalCodeFormat, "L") > 0 Then
-         If varRequiredFormat = "R" Then
-          RetryNewCustomer = 1
-          PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  It needs to be a combination of letters and numbers matching this format: " _
-           & Right(varFullPostalCodeFormat, Len(varFullPostalCodeFormat) - 1) & " (where 'n' is a number and 'L' is a letter."
-         Else
-          If Request("CheckedPostalCode") = "no" Then
-           varCheckedPostalCode = 1
-           RetryNewCustomer = 1
-           PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-          End If
-         End If
-        Else
-         If varRequiredFormat = "R" Then
-          RetryNewCustomer = 1
-          PostalCodeMessage = "Your " & varPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
-         Else
-          If Request("CheckedPostalCode") = "no" Then
-           varCheckedPostalCode = 1
-           RetryNewCustomer = 1
-           PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-          End If
-         End If
-        End If
-       End If
-      Next
-     End If
+    Dim varServerCounter As String = ""
+    Dim NameOfCart As String = ""
+    Dim varPriceGroup As String = ""
+    If Session("StoreName") <> "" Then
+        varServerCounter = Session("CustomerServerCounter")
+        NameOfCart = "W_CART_" & varServerCounter
+        varPriceGroup = Session("PriceGroup")
+    Else
+        NameOfCart = "CART" & Session.SessionID & Session("CartRandomNumbersExtension")
+        varPriceGroup = "RetailPrice"
     End If
-   End If
-   If varCountryUSA = "usa" And varValidCAPostalCode = "95762" And varIsValidPostalCode = "valid" And InStr(1, varGetPostalCodeForCityText, " ") > 0 Then
-    strSql = "Select * from WebCountryStateProvincesList where Country='USA' and StatProvince='California'"
+
+    Dim varChecked As string="checked"
+
+    'Wholesale or Retail
+    Dim varWholesaleOrRetail As String = Request("WholesaleOrRetailTxt")
+    If varWholesaleOrRetail = "" Or varWholesaleOrRetail = "retail" Then
+        varWholesaleOrRetail = "retail"
+        varPriceGroup = "RetailPrice"
+    Else
+        varWholesaleOrRetail = "wholesale"
+        varPriceGroup = "StorePrice"
+    End If
+    'Check for items in cart
+    Dim varItemsInCart As Integer = 0
     Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-     SqlConnection.ClearPool(conn)
-     conn.Open()
-     Dim CMD_X As New SqlCommand(strsq1, conn)
-     CMD_X.CommandType = Data.CommandType.Text
-     'CMD_X.ExecuteNonQuery()
-     PostalCodeMessage = "Invalid Postal Code"
+        SqlConnection.ClearPool(conn)
+        conn.Open()
+        Dim CMD_X As New SqlCommand("CartNumberOfItems", conn)
+        CMD_X.CommandType = Data.CommandType.StoredProcedure
+        CMD_X.Parameters.AddWithValue("@CartName", NameOfCart)
+        CMD_X.ExecuteScalar()
+        If Not IsDBNull(CMD_X) Then
+            varItemsInCart = 1
+        End If
     End Using
-    Response.Redirect("/home.aspx")
-   End If
-  End If
-  'Check Island
-  IslandMessage = ""
-  DefaultIsland = CapFirstLetter(SanitizeNameAndAddress(Request("Island")))
-  If varIslandRequired = "y" Then
-   If DefaultIsland = "" Then
-    RetryNewCustomer = 1
-    IslandMessage = "Please enter your " & varIslandWord & "."
-   End If
-  End If
-  'Check Billing FullName
-  BillingFullNameMessage = ""
-  DefaultBillingFullName = CapFirstLetter(SanitizeNameAndAddress(Request("BillingFullName")))
-  If DefaultBillingFullName = "" Then
-   RetryNewCustomer = 1
-   BillingFullNameMessage = "Please enter your Billing Full Name."
-  End If
-  'Check Billing Street Address Line 1
-  BillingStreetAddress1Message = ""
-  DefaultBillingStreetAddress1 = CapFirstLetter(SanitizeNameAndAddress(Request("BillingStreetAddress1")))
-  If DefaultBillingStreetAddress1 = "" Then
-   RetryNewCustomer = 1
-   BillingStreetAddress1Message = "Please enter your Billing Street Address Line 1."
-  End If
-  'Billing Street Address Line 2
-  DefaultBillingStreetAddress2 = SanitizeNameAndAddress(Request("BillingStreetAddress2"))
-  'Check Billing City
-  BillingCityMessage = ""
-  DefaultBillingCity = CapFirstLetter(SanitizeNameAndAddress(Request("BillingCity")))
-  If varBillingCityRequired = "y" Then
-   If DefaultBillingCity = "" Then
-    RetryNewCustomer = 1
-    BillingCityMessage = "Please enter your Billing " & varBillingCityWord & "."
-   End If
-  End If
-  'Check Billing StateProvince
-  BillingStateProvinceMessage = ""
-  DefaultBillingStateProvince = CapFirstLetter(SanitizeNameAndAddress(Request("BillingStateProvince")))
-  If varBillingStateProvinceRequired = "y" Then
-   If DefaultBillingStateProvince = "" Then
-    RetryNewCustomer = 1
-    BillingStateProvinceMessage = "Please enter your Billing " & varBillingStateProvinceWord & "."
-   End If
-  End If
-  'Check Billing PostalCode
-  If varPostalCodeRequired <> "n" Then
-   BillingPostalCodeMessage = ""
-   DefaultBillingPostalCode = fixtext(Request("BillingPostalCode"))
-   If varBillingPostalCodeRequired = "y" Then
-    varCheckedBillingPostalCode = 0
-    If DefaultBillingPostalCode = "" Then
-     RetryNewCustomer = 1
-     BillingPostalCodeMessage = "You did not enter your Billing " & varBillingPostalCodeWord & "."
-    ElseIf Len(varBillingFullPostalCodeFormat) > 0 Then
-     varRequiredFormat = UCase(Left(varBillingFullPostalCodeFormat, 1))
-     'Get BillingPostalCodeFormat To n & L Characters
-     varPostalCodeFormat = ""
-     varPostalCode = Right(varBillingFullPostalCodeFormat, Len(varBillingFullPostalCodeFormat) - 1)
-     For n30 = 1 To Len(varPostalCode)
-      x30 = Mid(varPostalCode, n30, 1)
-      If Mid(varPostalCode, n30, 1) = "n" Or Mid(varPostalCode, n30, 1) = "L" Then
-       varPostalCodeFormat = varPostalCodeFormat & Mid(varPostalCode, n30, 1)
-      End If
-     Next
-     'Get Customer PostalCode To n & L Characters
-     xx10 = 0
-     varSmallO = 0
-     varSmallOPosition = 0
-     varCustomerPostalCodeFormat = ""
-     varCustomerPostalCode = UCase(DefaultBillingPostalCode)
-     For n10 = 1 To Len(varCustomerPostalCode)
-      x10 = Mid(varCustomerPostalCode, n10, 1)
-      If Asc(x10) >= 65 And Asc(x10) <= 90 Then
-       xx10 = xx10 + 1
-       varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "L"
-       If Asc(x10) = 79 Then
-        varSmallO = 1
-        varSmallOPosition = xx10
-       End If
-      ElseIf Asc(x10) >= 48 And Asc(x10) <= 57 Then
-       xx10 = xx10 + 1
-       varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "n"
-      End If
-     Next
-     'Check For Correct Length
-     If Len(varCustomerPostalCodeFormat) <> Len(varPostalCodeFormat) Then
-      If InStr(1, varPostalCodeFormat, "L") > 0 Then
-       If varRequiredFormat = "R" Then
-        RetryNewCustomer = 1
-        BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  It should be a combination of " & Len(varPostalCodeFormat) & " letters and numbers."
-       Else
-        If Request("CheckedBillingPostalCode") = "no" Then
-         varCheckedBillingPostalCode = 1
-         RetryNewCustomer = 1
-         BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-        End If
-       End If
-      Else
-       If varRequiredFormat = "R" Then
-        RetryNewCustomer = 1
-        BillingPostalCodeMessage = "Your Billing " & varBillingPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
-       Else
-        If Request("CheckedBillingPostalCode") = "no" Then
-         varCheckedBillingPostalCode = 1
-         RetryNewCustomer = 1
-         BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-        End If
-       End If
-      End If
-     End If
-     'Check For Small O Instead Of A Zero
-     If BillingPostalCodeMessage = "" Then
-      If varSmallO = 1 Then
-       If Mid(varPostalCodeFormat, varSmallOPosition, 1) <> "L" Then
-        If varRequiredFormat = "R" Then
-         RetryNewCustomer = 1
-         BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  There is a letter 'O' where a number should be (maybe the number zero?)."
-        Else
-         If Request("CheckedBillingPostalCode") = "no" Then
-          varCheckedBillingPostalCode = 1
-          RetryNewCustomer = 1
-          BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-         End If
-        End If
-       End If
-      End If
-     End If
-     'Check For Numbers and Letters Where They Should Be
-     If BillingPostalCodeMessage = "" Then
-      For n20 = 1 To Len(varPostalCodeFormat)
-       If Mid(varPostalCodeFormat, n20, 1) <> Mid(varCustomerPostalCodeFormat, n20, 1) Then
-        If InStr(1, varPostalCodeFormat, "L") > 0 Then
-         If varRequiredFormat = "R" Then
-          RetryNewCustomer = 1
-          BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  It needs to be a combination of letters and numbers matching this format: " _
-           & Right(varBillingFullPostalCodeFormat, Len(varBillingFullPostalCodeFormat) - 1) & " (where 'n' is a number and 'L' is a letter."
-         Else
-          If Request("CheckedBillingPostalCode") = "no" Then
-           varCheckedBillingPostalCode = 1
-           RetryNewCustomer = 1
-           BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-          End If
-         End If
-        Else
-         If varRequiredFormat = "R" Then
-          RetryNewCustomer = 1
-          BillingPostalCodeMessage = "Your Billing " & varBillingPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
-         Else
-          If Request("CheckedBillingPostalCode") = "no" Then
-           varCheckedBillingPostalCode = 1
-           RetryNewCustomer = 1
-           BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
-          End If
-         End If
-        End If
-       End If
-      Next
-     End If
+    'Country
+    Dim defaultCountry As String = ""
+    Dim defaultBillingCountry As String = ""
+    Dim varCountryListCity As String = ""
+    Dim varCountryListStateProvince As String = ""
+    Dim defaultCountryListCounter As Integer = 0
+    Dim varBillingCountryListCity As String = ""
+    Dim varBillingCountryListStateProvince As String = ""
+    Dim defaultBillingCountryListCounter As Integer = 0
+    If Not IsNumeric(Request("CountryListCode")) And Request("CountryChangedTxt") <> "yes" And Request("BillingCountryChangedTxt") <> "yes" And Request("Country") = "" Then
+        Response.Redirect("/Options.aspx")
     End If
-   End If
-  End If
-  'Billing Island
-  BillingIslandMessage = ""
-  DefaultBillingIsland = CapFirstLetter(SanitizeNameAndAddress(Request("BillingIsland")))
-  If varBillingIslandRequired = "y" Then
-   If DefaultBillingIsland = "" Then
-    RetryNewCustomer = 1
-    BillingIslandMessage = "Please enter your Billing " & varBillingIslandWord & "."
-   End If
-  End If
-  'Phone
-  PhoneMessage = ""
-  DefaultPhone = SanitizeNameAndAddress(Request("Phone"))
-  If DefaultPhone = "" Then
-   RetryNewCustomer = 1
-   PhoneMessage = "You must enter a real phone number."
-  End If
-  If CheckForBadPhone(DefaultPhone) = 1 Then
-   RetryNewCustomer = 1
-   PhoneMessage = "Please check your phone number.  Customers outside the USA must enter a REAL phone number because FedEx and other delivery services will not deliver without a phone number."
-  End If
-  'Check Email
-  EmailMessage = ""
-  DefaultEmail = Request("Email")
-  DefaultEmail = Replace(DefaultEmail, " ", "")
-  If DefaultEmail = "" Then
-   RetryNewCustomer = 1
-   EmailMessage = "You must enter your E-mail so we can contact you if there is a problem with your order."
-  ElseIf Len(DefaultEmail) > 4 And UCase(Left(DefaultEmail, 4)) = "WWW." Then
-   DefaultEmail = Right(DefaultEmail, Len(DefaultEmail) - 4)
-  End If
-  If InStr(1, DefaultEmail, "@") = 0 Then
-   RetryNewCustomer = 1
-   EmailMessage = "Please enter a valid Email address. All valid Email addresses contain the '@' character."
-  End If
-  If InStr(1, DefaultEmail, "@.") > 0 Then
-   RetryNewCustomer = 1
-   EmailMessage = "Please enter a valid Email address. A period can not immediately follow the '@' character."
-  End If
-  If InStr(1, DefaultEmail, ".@") > 0 Then
-   RetryNewCustomer = 1
-   EmailMessage = "Please enter a valid Email address. A period can not immediately precede the '@' character."
-  End If
-  If InStr(1, DefaultEmail, ".") = 0 Then
-   RetryNewCustomer = 1
-   EmailMessage = "Please enter a valid Email address. All valid Email addresses contain a dot (period) character."
-  End If
-  If DefaultEmail <> "" And EmailMessage = "" Then
-   Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-    SqlConnection.ClearPool(conn)
-    conn.Open()
-    Dim CMD_X As New SqlCommand("spCheckLogInEmailExists", conn)
-    CMD_X.CommandType = Data.CommandType.StoredProcedure
-    CMD_X.Parameters.AddWithValue("@LogInEmail", DefaultEmail)
-    Dim readerX As SqlDataReader
-    readerX = CMD_X.ExecuteReader
-    If readerX.HasRows Then
-     readerX.Read()
-     RetryNewCustomer = 1
-     EmailMessage = "You already set up an account with your email address."
+    If Request("CountryListCode") <> "" And Request("CountryChangedTxt") <> "yes" And Request("BillingCountryChangedTxt") <> "yes" Then
+        Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+            SqlConnection.ClearPool(conn)
+            conn.Open()
+            Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
+            CMD_X.CommandType = Data.CommandType.StoredProcedure
+            CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("CountryListCode"), 0))
+            Dim readerX As SqlDataReader
+            readerX = CMD_X.ExecuteReader
+            If Not readerX.HasRows Then
+                Response.Redirect("/Options.aspx")
+            Else
+                readerX.Read()
+            End If
+            defaultCountry = readerX("Country")
+            defaultBillingCountry = readerX("Country")
+            varCountryListCity = IsDBSomething(readerX("City"), "")
+            varCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
+            defaultCountryListCounter = readerX("counter")
+            defaultBillingCountry = readerX("Country")
+            varBillingCountryListCity = IsDBSomething(readerX("City"), "")
+            varBillingCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
+            defaultBillingCountryListCounter = readerX("counter")
+        End Using
+    Else
+        Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+            SqlConnection.ClearPool(conn)
+            conn.Open()
+            Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
+            CMD_X.CommandType = Data.CommandType.StoredProcedure
+            CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("Country"), 0))
+            Dim readerX As SqlDataReader
+            readerX = CMD_X.ExecuteReader
+            If Not readerX.HasRows Then
+                Response.Redirect("/Options.aspx")
+            Else
+                readerX.Read()
+            End If
+            defaultCountry = readerX("Country")
+            varCountryListCity = IsDBSomething(readerX("City"), "")
+            varCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
+            defaultCountryListCounter = readerX("counter")
+        End Using
+        If Request("BillingCountry") <> "" Then
+            Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                SqlConnection.ClearPool(conn)
+                conn.Open()
+                Dim CMD_X As New SqlCommand("spGetCountryInfoFromCounter", conn)
+                CMD_X.CommandType = Data.CommandType.StoredProcedure
+                CMD_X.Parameters.AddWithValue("@counter", IsDBSomething(Request("BillingCountry"), 0))
+                Dim readerX As SqlDataReader
+                readerX = CMD_X.ExecuteReader
+                If Not readerX.HasRows Then
+                    Response.Redirect("/Options.aspx")
+                Else
+                    readerX.Read()
+                End If
+                defaultBillingCountry = readerX("Country")
+                varBillingCountryListCity = IsDBSomething(readerX("City"), "")
+                varBillingCountryListStateProvince = IsDBSomething(readerX("StateProvince"), "")
+                defaultBillingCountryListCounter = readerX("counter")
+            End Using
+        End If
     End If
-   End Using
-  End If
-  'ResidentialDelivery
-  DefaultResidentialDelivery = SanitizeNameAndAddress(Request("ResidentialDelivery"))
-  ResidentialDeliveryMessage = ""
-  If Len(DefaultResidentialDelivery) > 1 Then
-   DefaultResidentialDelivery = Left(DefaultResidentialDelivery, 1)
-  End If
-  If UCase(DefaultResidentialDelivery) <> "Y" And UCase(DefaultResidentialDelivery) <> "N" Then
-   RetryNewCustomer = 1
-   ResidentialDeliveryMessage = "Residential Delivery must be 'y' or 'n'."
-  End If
-  'ChargeSalesTax
-  DefaultChargeSalesTax = SanitizeNameAndAddress(Request("ChargeSalesTax"))
-  ChargeSalesTaxMessage = ""
-  If Len(DefaultChargeSalesTax) > 1 Then
-   DefaultChargeSalesTax = Left(DefaultChargeSalesTax, 1)
-  End If
-  If DefaultChargeSalesTax <> "" And UCase(DefaultChargeSalesTax) <> "N" Then
-   RetryNewCustomer = 1
-   ChargeSalesTaxMessage = "ChargeSalesTax must be 'n' or left blank."
-  End If
-  'Check Pword
-  PwordMessage = ""
-  DefaultPword = Request("Pword")
-  If DefaultPword = "" And Session("PowerUserName") <> "" Then
-   Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-    SqlConnection.ClearPool(conn)
-    conn.Open()
-    Dim CMD_X As New SqlCommand("spFigurePassword", conn)
-    CMD_X.CommandType = Data.CommandType.StoredProcedure
-    Dim readerX As SqlDataReader
-    readerX = CMD_X.ExecuteReader
-    readerX.Read()
-    DefaultPword = readerX("Password")
-   End Using
-  Else
-   If DefaultPword = "" Then
-    RetryNewCustomer = 1
-    PwordMessage = "You did not enter a password."
-   ElseIf Len(DefaultPword) < 6 Then
-    RetryNewCustomer = 1
-    PwordMessage = "Must be at least 6 letters long."
-   Else
-    For n = 1 To Len(Request("Pword"))
-     cc = Asc(Mid(Request("Pword"), n, 1))
-     If (cc < 48 Or (cc > 57 And cc < 65) Or (cc > 90 And cc < 97) Or cc > 122) And cc <> 33 And cc <> 35 And cc <> 36 And cc <> 37 And cc <> 38 And cc <> 40 And cc <> 41 And cc <> 42 And cc <> 64 And cc <> 94 Then
-      RetryNewCustomer = 1
-      PwordMessage = "Must contain only letters, numbers or these special characters: !@#$%^&*()"
-      Exit For
-     End If
-    Next
-   End If
-  End If
-  'New Release Email
-  If Request("NewReleaseEmail") = "on" Or Request("NewReleaseEmail") = "active" Then
-   varChecked = "checked"
-  Else
-   varChecked = ""
-  End If
-  'Phoney CustomerID
-  varNewCustomerID = "NEW-CUST" & phoneycustomerid
-  'Enter New Customer-------------------------------------------------------------------------------
-  If RetryNewCustomer = 0 Then
-   Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-    SqlConnection.ClearPool(conn)
-    conn.Open()
-    Dim CMD_X As New SqlCommand("spInsertCustomer", conn)
-    CMD_X.CommandType = Data.CommandType.StoredProcedure
-    CMD_X.Parameters.AddWithValue("@PriceGroup", varPriceGroup)
-    CMD_X.Parameters.AddWithValue("@CustomerID", varNewCustomerID)
-    CMD_X.Parameters.AddWithValue("@FullName", IsSomething(DefaultFullName, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@StreetAddress1", IsSomething(DefaultStreetAddress1, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@StreetAddress2", IsSomething(DefaultStreetAddress2, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@City", IsSomething(DefaultCity, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@StateProvince", IsSomething(DefaultStateProvince, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@PostalCode", IsSomething(DefaultPostalCode, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Island", IsSomething(DefaultIsland, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Country", IsSomething(defaultCountry, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingFullName", IsSomething(DefaultBillingFullName, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingStreetAddress1", IsSomething(DefaultBillingStreetAddress1, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingStreetAddress2", IsSomething(DefaultBillingStreetAddress2, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingCity", IsSomething(DefaultBillingCity, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingStateProvince", IsSomething(DefaultBillingStateProvince, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingPostalCode", IsSomething(DefaultBillingPostalCode, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingIsland", IsSomething(DefaultBillingIsland, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@BillingCountry", IsSomething(defaultBillingCountry, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Phone", IsSomething(DefaultPhone, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Phone2", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@Phone3", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@Email", IsSomething(DefaultEmail, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Email2", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@Email3", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@LogInEmail", IsSomething(DefaultEmail, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@Password", IsSomething(DefaultPword, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@HowFoundUs", DBNull.Value)
-    CMD_X.Parameters.AddWithValue("@IPAddress", Request.ServerVariables("HTTP_X_FORWARDED_FOR"))
-    CMD_X.Parameters.AddWithValue("@ResidentialDelivery", IsSomething(DefaultResidentialDelivery, DBNull.Value))
-    CMD_X.Parameters.AddWithValue("@ChargeSalesTax", IsSomething(DefaultChargeSalesTax, DBNull.Value))
-    Dim outputID As New SqlParameter("@IDOUTPUT", Data.SqlDbType.Int)
-    CMD_X.Parameters.Add(outputID)
-    outputID.Direction = Data.ParameterDirection.Output
-    CMD_X.ExecuteNonQuery()
-    varNewCustomerCounter = outputID.Value
-   End Using
-   Session("PasswordMaster") = DefaultPword
-   'Record New Releases Email Info
-   If Request("NewReleaseEmail") = "" Then
+
+    'WebCountryShippingZonesT
+    Dim varPostalCodeRequired As String = ""
+    Dim varStateProvinceRequired As String = ""
+    Dim varCityRequired As String = ""
+    Dim varIslandRequired As String = ""
+    Dim varStateProvinceWord As String = ""
+    Dim varIslandWord As String = ""
+    Dim varPostalCodeWord As String = ""
+    Dim varCityWord As String = ""
+    Dim varFullPostalCodeFormat As String = ""
     Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-     SqlConnection.ClearPool(conn)
-     conn.Open()
-     Dim CMD_X As New SqlCommand("spInsertNewReleaseEmailOptInOrOut", conn)
-     CMD_X.CommandType = Data.CommandType.StoredProcedure
-     CMD_X.Parameters.AddWithValue("@FullName", DefaultFullName)
-     CMD_X.Parameters.AddWithValue("@Email", DefaultEmail)
-     CMD_X.Parameters.AddWithValue("@Password", DefaultPword)
-     CMD_X.ExecuteNonQuery()
+        SqlConnection.ClearPool(conn)
+        conn.Open()
+        Dim CMD_X As New SqlCommand("spGetWebCountryShippingZonesTRow", conn)
+        CMD_X.CommandType = Data.CommandType.StoredProcedure
+        CMD_X.Parameters.AddWithValue("@Country", defaultCountry)
+        Dim readerX As SqlDataReader
+        readerX = CMD_X.ExecuteReader
+        readerX.Read()
+        varPostalCodeRequired = IsDBSomething(readerX("PostalCodeRequired"), "")
+        varStateProvinceRequired = IsDBSomething(readerX("StateProvinceRequired"), "")
+        varCityRequired = IsDBSomething(readerX("CityRequired"), "")
+        varIslandRequired = IsDBSomething(readerX("IslandRequired"), "")
+        varStateProvinceWord = IsDBSomething(readerX("StateProvinceWord"), "")
+        varIslandWord = IsDBSomething(readerX("IslandWord"), "")
+        varPostalCodeWord = IsDBSomething(readerX("PostalCodeWord"), "")
+        varCityWord = IsDBSomething(readerX("CityWord"), "")
+        varFullPostalCodeFormat = IsDBSomething(readerX("PostalCodeFormat"), "")
     End Using
-   End If
-   'Email Instant Wholesale Password
-   If varWholesaleOrRetail = "wholesale" And Z_CheckValidEmail(DefaultEmail) = "yes" And strDoNotEmailSignInCredentials = "n" Then
-    Call Z_EmailWholesalePassword(varNewCustomerCounter, strConnectionStringName)
-   End If
-   'Email Ernie
-   varEmailBody = DefaultPhone
-   varEmailBody = varEmailBody & vbCrLf & vbCrLf & "BILL TO ADDRESS:"
-   varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultBillingFullName
-   varEmailBody = varEmailBody & vbCrLf & DefaultBillingStreetAddress1
-   If DefaultBillingStreetAddress2 <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultBillingStreetAddress2
-   End If
-   If DefaultBillingCity <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultBillingCity
-   End If
-   If DefaultBillingStateProvince <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultBillingStateProvince
-   End If
-   If DefaultBillingPostalCode <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultBillingPostalCode
-   End If
-   If DefaultBillingIsland <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultBillingIsland
-   End If
-   If defaultBillingCountry <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & defaultBillingCountry
-   End If
-   varEmailBody = varEmailBody & vbCrLf & vbCrLf & vbCrLf & "SHIP TO ADDRESS:"
-   varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultFullName
-   varEmailBody = varEmailBody & vbCrLf & DefaultStreetAddress1
-   If DefaultStreetAddress2 <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultStreetAddress2
-   End If
-   If DefaultCity <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultCity
-   End If
-   If DefaultStateProvince <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultStateProvince
-   End If
-   If DefaultPostalCode <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultPostalCode
-   End If
-   If DefaultIsland <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & DefaultIsland
-   End If
-   If defaultCountry <> "" Then
-    varEmailBody = varEmailBody & vbCrLf & defaultCountry
-   End If
-   varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultEmail
+    'WebBillingCountryShippingZonesT
+    Dim varBillingPostalCodeRequired As String = ""
+    Dim varBillingStateProvinceRequired As String = ""
+    Dim varBillingCityRequired As String = ""
+    Dim varBillingIslandRequired As String = ""
+    Dim varBillingStateProvinceWord As String = ""
+    Dim varBillingIslandWord As String = ""
+    Dim varBillingPostalCodeWord As String = ""
+    Dim varBillingCityWord As String = ""
+    Dim varBillingFullPostalCodeFormat As String = ""
+    If defaultBillingCountry <> "" Then
+        Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+            SqlConnection.ClearPool(conn)
+            conn.Open()
+            Dim CMD_X As New SqlCommand("spGetWebCountryShippingZonesTRow", conn)
+            CMD_X.CommandType = Data.CommandType.StoredProcedure
+            CMD_X.Parameters.AddWithValue("@Country", defaultBillingCountry)
+            Dim readerX As SqlDataReader
+            readerX = CMD_X.ExecuteReader
+            If Not readerX.HasRows Then
+                Response.Redirect("/home.aspx")
+            End If
+            readerX.Read()
+            varBillingPostalCodeRequired = IsDBSomething(readerX("PostalCodeRequired"), "")
+            varBillingStateProvinceRequired = IsDBSomething(readerX("StateProvinceRequired"), "")
+            varBillingCityRequired = IsDBSomething(readerX("CityRequired"), "")
+            varBillingIslandRequired = IsDBSomething(readerX("IslandRequired"), "")
+            varBillingStateProvinceWord = IsDBSomething(readerX("StateProvinceWord"), "")
+            varBillingIslandWord = IsDBSomething(readerX("IslandWord"), "")
+            varBillingPostalCodeWord = IsDBSomething(readerX("PostalCodeWord"), "")
+            varBillingCityWord = IsDBSomething(readerX("CityWord"), "")
+            varBillingFullPostalCodeFormat = IsDBSomething(readerX("PostalCodeFormat"), "")
+        End Using
+    End If
 
-   subSendEmail("ernie@millionsofrecords.com", "ernieb12345@gmail.com", "NWEB " & DefaultFullName & " - " & defaultCountry, varEmailBody, 1, 0, strConnectionStringName)
-
-   'Redirect for new customer entered by PowerUser
-   If Session("PowerUserName") <> "" And Session("SuperPowerUserName") = "" Then
-    Response.Redirect("/CustomerAdded.aspx")
-    Response.End()
-   End If
-   'Sign In New Customer
-   Session("PriceGroup") = varPriceGroup
-   Session("CustomerServerCounter") = varNewCustomerCounter.ToString
-   Session("CustomerID") = varNewCustomerID
-   Session("LogInEmailMaster") = DefaultEmail
-   Session("PasswordMaster") = DefaultPword
-   Session("PostalCode") = DefaultPostalCode
-   Session("BillingPostalCode") = DefaultBillingPostalCode
-   Session("Country") = defaultCountry
-   Session("BillingCountry") = defaultBillingCountry
-   Session("StoreName") = DefaultFullName
-   Session("ShippingCartCountry") = Session("Country")
-   Session("ShippingCartPostalCode") = DefaultPostalCode
-   If Len(Session("ShippingCartPostalCode")) = 0 Then Session("ShippingCartPostalCode") = ""
-   Session("PostalCodeHelpShipping") = ""
-   Session("ShippingCartShippingMethod") = ""
-   Session("ShippingCartZone") = ""
-   If UCase(DefaultResidentialDelivery) = "N" Then
-    Session("ResidentialDelivery") = "NO"
-   Else
-    Session("ResidentialDelivery") = "YES"
-   End If
-   Session("WebOrderNumberJustPurchased") = ""
-   'Empty Retail Cart Into Wholesale Cart (if not a PowerUser) 
-   RetailNameOfCart = "CART" & Session.SessionID & Session("CartRandomNumbersExtension")
-   WholesaleNameOfCart = "W_CART_" & Session("CustomerServerCounter")
-   If Session("PowerUserName") = "" Then
-    Using conn3 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-     SqlConnection.ClearPool(conn3)
-     conn3.Open()
-     Dim CMD_RC As New SqlCommand("spGetCartItems", conn3)
-     CMD_RC.CommandType = Data.CommandType.StoredProcedure
-     CMD_RC.Parameters.AddWithValue("@CartName", RetailNameOfCart)
-     Dim readerRC As SqlDataReader
-     readerRC = CMD_RC.ExecuteReader
-     If readerRC.HasRows Then
-      Do While readerRC.Read
-       If readerRC("Quantity") = 0 Then
-        Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-         SqlConnection.ClearPool(conn4)
-         conn4.Open()
-         Dim CMD_D As New SqlCommand("spDeleteCartItem", conn4)
-         CMD_D.CommandType = Data.CommandType.StoredProcedure
-         CMD_D.Parameters.AddWithValue("@CartName", RetailNameOfCart)
-         CMD_D.Parameters.AddWithValue("@ItemID", readerRC("ItemID"))
-         CMD_D.ExecuteNonQuery()
-        End Using
-       Else
-        Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-         SqlConnection.ClearPool(conn4)
-         conn4.Open()
-         Dim CMD_D As New SqlCommand("spGetInventoryItem", conn4)
-         CMD_D.CommandType = Data.CommandType.StoredProcedure
-         CMD_D.Parameters.AddWithValue("@ID", readerRC("ItemID"))
-         Dim readerInv As SqlDataReader
-         readerInv = CMD_D.ExecuteReader
-         If readerInv.HasRows Then
-          readerInv.Read()
-          If Session("PriceGroup") = "StorePrice" Then
-           If Not IsDBNull(readerInv("Sale_WholesalePrice")) And Not IsDBNull(readerInv("Sale_WholesaleEndDate")) Then
-            If DateDiff(DateInterval.Day, Date.Now, readerInv("Sale_WholesaleEndDate")) >= 0 Then
-             varSaleItem = 1
-            End If
-           End If
-          Else
-           If Not IsDBNull(readerInv("Sale_RetailPrice")) And Not IsDBNull(readerInv("Sale_RetailEndDate")) Then
-            If DateDiff(DateInterval.Day, Date.Now, readerInv("Sale_RetailEndDate")) >= 0 Then
-             varSaleItem = 1
-            End If
-           End If
-          End If
-          If varSaleItem = 1 Then
-           If Session("PriceGroup") = "StorePrice" Then
-            If IsDBNull(readerInv("Sale_WholesalePrice")) Then
-             LogInPrice = 0
-            Else
-             LogInPrice = readerInv("Sale_WholesalePrice")
-            End If
-           Else
-            If IsDBNull(readerInv("Sale_RetailPrice")) Then
-             LogInPrice = 0
-            Else
-             LogInPrice = readerInv("Sale_RetailPrice")
-            End If
-           End If
-          ElseIf Session("PriceGroup") = "StorePrice" Then
-           LogInPrice = readerInv("StorePrice")
-          ElseIf Session("PriceGroup") = "RetailPrice" Then
-           LogInPrice = readerInv("RetailPrice")
-          End If
-         End If
-        End Using
-        Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-         SqlConnection.ClearPool(conn4)
-         conn4.Open()
-         Dim CMD_D As New SqlCommand("spAddRetailCartItemToWholesaleCart", conn4)
-         CMD_D.CommandType = Data.CommandType.StoredProcedure
-         CMD_D.Parameters.AddWithValue("@CartName", WholesaleNameOfCart)
-         CMD_D.Parameters.AddWithValue("@ItemID", readerRC("ItemID"))
-         CMD_D.Parameters.AddWithValue("@Quantity", readerRC("Quantity"))
-         CMD_D.Parameters.AddWithValue("@WholesalePrice", LogInPrice)
-         CMD_D.Parameters.AddWithValue("@SearchCriteriaStatisticsID", readerRC("SearchCriteriaStatisticsID"))
-         CMD_D.Parameters.AddWithValue("@IPAddress", readerRC("IPAddress"))
-         CMD_D.ExecuteNonQuery()
-        End Using
-       End If
-       Response.Cookies("Chosen").Value = "none"
-       Response.Cookies("Chosen").Path = "/"
-      Loop
-      Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-       SqlConnection.ClearPool(conn4)
-       conn4.Open()
-       Dim CMD_D As New SqlCommand("spDeleteCart", conn4)
-       CMD_D.CommandType = Data.CommandType.StoredProcedure
-       CMD_D.Parameters.AddWithValue("@CartName", RetailNameOfCart)
-       CMD_D.ExecuteNonQuery()
-      End Using
-      Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
-       SqlConnection.ClearPool(conn4)
-       conn4.Open()
-       Dim CMD_D As New SqlCommand("spUpdateCartQuantityInCustomersTable", conn4)
-       CMD_D.CommandType = Data.CommandType.StoredProcedure
-       CMD_D.Parameters.AddWithValue("@CustomerServerCounter", IsSomething(Session("CustomerServerCounter"), "0"))
-       CMD_D.ExecuteNonQuery()
-      End Using
-     End If
+    'WebCountryStateProvincesList
+    Dim varStateProvinceList As String = ""
+    Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+        SqlConnection.ClearPool(conn)
+        conn.Open()
+        Dim CMD_X As New SqlCommand("spGetCountOfWebCountryStateProvinces", conn)
+        CMD_X.CommandType = Data.CommandType.StoredProcedure
+        CMD_X.Parameters.AddWithValue("@Country", defaultCountry)
+        Dim readerX As SqlDataReader
+        readerX = CMD_X.ExecuteReader
+        readerX.Read()
+        If readerX("ccc") = 0 Then
+            varStateProvinceList = "n"
+        Else
+            varStateProvinceList = "y"
+        End If
     End Using
-   End If
-   'Redirect Successful New Customer
-   If varContinueToPurchasePage = "y" Then
-    Response.Redirect("/Purchase.aspx")
-   ElseIf Session("PowerUserName") <> "" Then
-    Response.Redirect("/CustomerInfo.aspx")
-   Else
-    Response.Redirect("/WholesaleAccepted.aspx")
-   End If
-  End If
- Else
-  If varWholesaleOrRetail="wholesale" then
-   defaultResidentialDelivery="n"
-  else
-   defaultResidentialDelivery="y"
-  end if
-  defaultChargeSalesTax=""
- end if%>
+    'WebBillingCountryStateProvincesList
+    Dim varBillingStateProvinceList As String = ""
+    If defaultBillingCountry <> "" Then
+        Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+            SqlConnection.ClearPool(conn)
+            conn.Open()
+            Dim CMD_X As New SqlCommand("spGetCountOfWebCountryStateProvinces", conn)
+            CMD_X.CommandType = Data.CommandType.StoredProcedure
+            CMD_X.Parameters.AddWithValue("@Country", defaultBillingCountry)
+            Dim readerX As SqlDataReader
+            readerX = CMD_X.ExecuteReader
+            readerX.Read()
+            If readerX("ccc") = 0 Then
+                varBillingStateProvinceList = "n"
+            Else
+                varBillingStateProvinceList = "y"
+            End If
+        End Using
+    End If
+    'Email Sign-In Credentials
+    Dim strDoNotEmailSignInCredentialsChecked As String = ""
+    Dim strDoNotEmailSignInCredentials As String = "n"
+    If Request("txtDoNotEmailSignInCredentials") = "y" Then
+        strDoNotEmailSignInCredentialsChecked = "checked"
+        strDoNotEmailSignInCredentials = "y"
+    End If
+
+    Dim RetryNewCustomer As Integer = 0
+    Dim FullNameMessage As String = ""
+    Dim DefaultFullName As String = ""
+    Dim StreetAddress1Message As String = ""
+    Dim DefaultStreetAddress1 As String = ""
+    Dim DefaultStreetAddress2 As String = ""
+    Dim CityMessage As String = ""
+    Dim DefaultCity As String = ""
+    Dim StateProvinceMessage As String = ""
+    Dim DefaultStateProvince As String = ""
+    Dim varGetPostalCodeForCityText As String = ""
+    Dim varValidZip As String = ""
+    Dim strsq1 As String = ""
+    Dim varCountryUSA As String = ""
+    Dim varValidCAPostalCode As String = ""
+    Dim varIsValidPostalCode As String = ""
+    Dim PostalCodeMessage As String = ""
+    Dim DefaultPostalCode As String = ""
+    Dim varCheckedPostalCode As Integer = 0
+    Dim varRequiredFormat As String = ""
+    Dim varPostalCodeFormat As String = ""
+    Dim varPostalCode As String = ""
+    Dim x30 As String = ""
+    Dim xx10 As Integer = 0
+    Dim varSmallO As Integer = 0
+    Dim varSmallOPosition As Integer = 0
+    Dim varCustomerPostalCodeFormat As String = ""
+    Dim varCustomerPostalCode As String = ""
+    Dim x10 As String = ""
+    Dim strSql As String = ""
+    Dim IslandMessage As String = ""
+    Dim DefaultIsland As String = ""
+    Dim BillingFullNameMessage As String = ""
+    Dim DefaultBillingFullName As String = ""
+    Dim BillingStreetAddress1Message As String = ""
+    Dim DefaultBillingStreetAddress1 As String = ""
+    Dim DefaultBillingStreetAddress2 As String = ""
+    Dim BillingCityMessage As String = ""
+    Dim DefaultBillingCity As String = ""
+    Dim BillingStateProvinceMessage As String = ""
+    Dim DefaultBillingStateProvince As String = ""
+    Dim BillingPostalCodeMessage As String = ""
+    Dim DefaultBillingPostalCode As String = ""
+    Dim varCheckedBillingPostalCode As Integer = 0
+    Dim BillingIslandMessage As String = ""
+    Dim DefaultBillingIsland As String = ""
+    Dim PhoneMessage As String = ""
+    Dim DefaultPhone As String = ""
+    Dim EmailMessage As String = ""
+    Dim DefaultEmail As String = ""
+    Dim DefaultResidentialDelivery As String = ""
+    Dim ResidentialDeliveryMessage As String = ""
+    Dim DefaultChargeSalesTax As String = ""
+    Dim ChargeSalesTaxMessage As String = ""
+    Dim PwordMessage As String = ""
+    Dim DefaultPword As String = ""
+    Dim cc As Integer = 0
+    Dim DefaultOther As String = ""
+    Dim phoneycustomerid As Integer = 0
+    Dim varNewCustomerID As String = ""
+    Dim varNewCustomerCounter As Integer = 0
+    Dim RetailNameOfCart As String = ""
+    Dim WholesaleNameOfCart As String = ""
+    Dim varSaleItem As Integer = 0
+    Dim LogInPrice As Double = 0
+    Dim varGetPostalCodeForCity As String = ""
+    Dim varEmailBody As String = ""
+
+    'Continue To Purchase Page Variable
+    Dim varContinueToPurchasePage As String = ""
+    If Request.QueryString("ContinueToPurchasePage") = "y" Or Request("ContinueToPurchasePage") = "y" Then
+        varContinueToPurchasePage = "y"
+    Else
+        varContinueToPurchasePage = "no"
+    End If
+
+    'From This Page--------------------------------------------------------------------------------------
+    If Request("NewCustomer") = "yes" Then
+        RetryNewCustomer = 0
+        'Check FullName
+        FullNameMessage = ""
+        DefaultFullName = CapFirstLetter(SanitizeNameAndAddress(Request("FullName")))
+        If DefaultFullName = "" Then
+            RetryNewCustomer = 1
+            FullNameMessage = "Please enter your Full Name."
+        End If
+        'Check Street Address Line 1
+        StreetAddress1Message = ""
+        DefaultStreetAddress1 = CapFirstLetter(SanitizeNameAndAddress(Request("StreetAddress1")))
+        If DefaultStreetAddress1 = "" Then
+            RetryNewCustomer = 1
+            StreetAddress1Message = "Please enter your Street Address Line 1."
+        End If
+        'Street Address Line 2
+        DefaultStreetAddress2 = SanitizeNameAndAddress(Request("StreetAddress2"))
+        'Check City
+        CityMessage = ""
+        DefaultCity = CapFirstLetter(SanitizeNameAndAddress(Request("City")))
+        If varCityRequired = "y" Then
+            If DefaultCity = "" Then
+                RetryNewCustomer = 1
+                CityMessage = "Please enter your " & varCityWord & "."
+            End If
+        End If
+        'Check StateProvince
+        StateProvinceMessage = ""
+        DefaultStateProvince = CapFirstLetter(SanitizeNameAndAddress(Request("StateProvince")))
+        If varStateProvinceRequired = "y" Then
+            If DefaultStateProvince = "" Then
+                RetryNewCustomer = 1
+                StateProvinceMessage = "Please enter your " & varStateProvinceWord & "."
+            End If
+        End If
+        'Check PostalCode
+        If varPostalCodeRequired <> "n" Then
+            varGetPostalCodeForCityText = Request("GetPostalCodeForCity")
+            varValidZip = Request("PostalCodeName")
+            strsq1 = Left(varGetPostalCodeForCityText, 100)
+            varCountryUSA = Left(Request(varValidZip), 3)
+            varValidCAPostalCode = Mid(Request(varValidZip), 4, 5)
+            varIsValidPostalCode = Right(Request(varValidZip), 5)
+            PostalCodeMessage = ""
+            DefaultPostalCode = fixtext(Request("PostalCode"))
+            If varPostalCodeRequired = "y" Then
+                varCheckedPostalCode = 0
+                If DefaultPostalCode = "" Then
+                    RetryNewCustomer = 1
+                    PostalCodeMessage = "You did Not enter your " & varPostalCodeWord & "."
+                ElseIf Len(varFullPostalCodeFormat) > 0 Then
+                    varRequiredFormat = UCase(Left(varFullPostalCodeFormat, 1))
+                    'Get PostalCodeFormat To n & L Characters
+                    varPostalCodeFormat = ""
+                    varPostalCode = Right(varFullPostalCodeFormat, Len(varFullPostalCodeFormat) - 1)
+                    For n30 = 1 To Len(varPostalCode)
+                        x30 = Mid(varPostalCode, n30, 1)
+                        If Mid(varPostalCode, n30, 1) = "n" Or Mid(varPostalCode, n30, 1) = "L" Then
+                            varPostalCodeFormat = varPostalCodeFormat & Mid(varPostalCode, n30, 1)
+                        End If
+                    Next
+                    'Get Customer PostalCode To n & L Characters
+                    xx10 = 0
+                    varSmallO = 0
+                    varSmallOPosition = 0
+                    varCustomerPostalCodeFormat = ""
+                    varCustomerPostalCode = UCase(DefaultPostalCode)
+                    For n10 = 1 To Len(varCustomerPostalCode)
+                        x10 = Mid(varCustomerPostalCode, n10, 1)
+                        If Asc(x10) >= 65 And Asc(x10) <= 90 Then
+                            xx10 = xx10 + 1
+                            varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "L"
+                            If Asc(x10) = 79 Then
+                                varSmallO = 1
+                                varSmallOPosition = xx10
+                            End If
+                        ElseIf Asc(x10) >= 48 And Asc(x10) <= 57 Then
+                            xx10 = xx10 + 1
+                            varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "n"
+                        End If
+                    Next
+                    'Check For Correct Length
+                    If Len(varCustomerPostalCodeFormat) <> Len(varPostalCodeFormat) Then
+                        If InStr(1, varPostalCodeFormat, "L") > 0 Then
+                            If varRequiredFormat = "R" Then
+                                RetryNewCustomer = 1
+                                PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  It should be a combination Of " & Len(varPostalCodeFormat) & " letters And numbers."
+                            Else
+                                If Request("CheckedPostalCode") = "no" Then
+                                    varCheckedPostalCode = 1
+                                    RetryNewCustomer = 1
+                                    PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it Is correct Then ignore this message And submit your information again."
+                                End If
+                            End If
+                        Else
+                            If varRequiredFormat = "R" Then
+                                RetryNewCustomer = 1
+                                PostalCodeMessage = "Your " & varPostalCodeWord & " needs To be " & Len(varPostalCodeFormat) & " numbers Long (no letters)."
+                            Else
+                                If Request("CheckedPostalCode") = "no" Then
+                                    varCheckedPostalCode = 1
+                                    RetryNewCustomer = 1
+                                    PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it Is correct Then ignore this message And submit your information again."
+                                End If
+                            End If
+                        End If
+                    End If
+                    'Check For Small O Instead Of A Zero
+                    If PostalCodeMessage = "" Then
+                        If varSmallO = 1 Then
+                            If Mid(varPostalCodeFormat, varSmallOPosition, 1) <> "L" Then
+                                If varRequiredFormat = "R" Then
+                                    RetryNewCustomer = 1
+                                    PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  There Is a letter 'O' where a number should be (maybe the number zero?)."
+                                Else
+                                    If Request("CheckedPostalCode") = "no" Then
+                                        varCheckedPostalCode = 1
+                                        RetryNewCustomer = 1
+                                        PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                    End If
+                                End If
+                            End If
+                        End If
+                    End If
+                    'Check For Numbers and Letters Where They Should Be
+                    If PostalCodeMessage = "" Then
+                        For n20 = 1 To Len(varPostalCodeFormat)
+                            If Mid(varPostalCodeFormat, n20, 1) <> Mid(varCustomerPostalCodeFormat, n20, 1) Then
+                                If InStr(1, varPostalCodeFormat, "L") > 0 Then
+                                    If varRequiredFormat = "R" Then
+                                        RetryNewCustomer = 1
+                                        PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  It needs to be a combination of letters and numbers matching this format: " _
+                                         & Right(varFullPostalCodeFormat, Len(varFullPostalCodeFormat) - 1) & " (where 'n' is a number and 'L' is a letter."
+                                    Else
+                                        If Request("CheckedPostalCode") = "no" Then
+                                            varCheckedPostalCode = 1
+                                            RetryNewCustomer = 1
+                                            PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                        End If
+                                    End If
+                                Else
+                                    If varRequiredFormat = "R" Then
+                                        RetryNewCustomer = 1
+                                        PostalCodeMessage = "Your " & varPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
+                                    Else
+                                        If Request("CheckedPostalCode") = "no" Then
+                                            varCheckedPostalCode = 1
+                                            RetryNewCustomer = 1
+                                            PostalCodeMessage = "Please re-check your " & varPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                        End If
+                                    End If
+                                End If
+                            End If
+                        Next
+                    End If
+                End If
+            End If
+            If varCountryUSA = "usa" And varValidCAPostalCode = "95762" And varIsValidPostalCode = "valid" And InStr(1, varGetPostalCodeForCityText, " ") > 0 Then
+                strSql = "Select * from WebCountryStateProvincesList where Country='USA' and StatProvince='California'"
+                Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                    SqlConnection.ClearPool(conn)
+                    conn.Open()
+                    Dim CMD_X As New SqlCommand(strsq1, conn)
+                    CMD_X.CommandType = Data.CommandType.Text
+                    'CMD_X.ExecuteNonQuery()
+                    PostalCodeMessage = "Invalid Postal Code"
+                End Using
+                Response.Redirect("/home.aspx")
+            End If
+        End If
+        'Check Island
+        IslandMessage = ""
+        DefaultIsland = CapFirstLetter(SanitizeNameAndAddress(Request("Island")))
+        If varIslandRequired = "y" Then
+            If DefaultIsland = "" Then
+                RetryNewCustomer = 1
+                IslandMessage = "Please enter your " & varIslandWord & "."
+            End If
+        End If
+        'Check Billing FullName
+        BillingFullNameMessage = ""
+        DefaultBillingFullName = CapFirstLetter(SanitizeNameAndAddress(Request("BillingFullName")))
+        If DefaultBillingFullName = "" Then
+            RetryNewCustomer = 1
+            BillingFullNameMessage = "Please enter your Billing Full Name."
+        End If
+        'Check Billing Street Address Line 1
+        BillingStreetAddress1Message = ""
+        DefaultBillingStreetAddress1 = CapFirstLetter(SanitizeNameAndAddress(Request("BillingStreetAddress1")))
+        If DefaultBillingStreetAddress1 = "" Then
+            RetryNewCustomer = 1
+            BillingStreetAddress1Message = "Please enter your Billing Street Address Line 1."
+        End If
+        'Billing Street Address Line 2
+        DefaultBillingStreetAddress2 = SanitizeNameAndAddress(Request("BillingStreetAddress2"))
+        'Check Billing City
+        BillingCityMessage = ""
+        DefaultBillingCity = CapFirstLetter(SanitizeNameAndAddress(Request("BillingCity")))
+        If varBillingCityRequired = "y" Then
+            If DefaultBillingCity = "" Then
+                RetryNewCustomer = 1
+                BillingCityMessage = "Please enter your Billing " & varBillingCityWord & "."
+            End If
+        End If
+        'Check Billing StateProvince
+        BillingStateProvinceMessage = ""
+        DefaultBillingStateProvince = CapFirstLetter(SanitizeNameAndAddress(Request("BillingStateProvince")))
+        If varBillingStateProvinceRequired = "y" Then
+            If DefaultBillingStateProvince = "" Then
+                RetryNewCustomer = 1
+                BillingStateProvinceMessage = "Please enter your Billing " & varBillingStateProvinceWord & "."
+            End If
+        End If
+        'Check Billing PostalCode
+        If varPostalCodeRequired <> "n" Then
+            BillingPostalCodeMessage = ""
+            DefaultBillingPostalCode = fixtext(Request("BillingPostalCode"))
+            If varBillingPostalCodeRequired = "y" Then
+                varCheckedBillingPostalCode = 0
+                If DefaultBillingPostalCode = "" Then
+                    RetryNewCustomer = 1
+                    BillingPostalCodeMessage = "You did not enter your Billing " & varBillingPostalCodeWord & "."
+                ElseIf Len(varBillingFullPostalCodeFormat) > 0 Then
+                    varRequiredFormat = UCase(Left(varBillingFullPostalCodeFormat, 1))
+                    'Get BillingPostalCodeFormat To n & L Characters
+                    varPostalCodeFormat = ""
+                    varPostalCode = Right(varBillingFullPostalCodeFormat, Len(varBillingFullPostalCodeFormat) - 1)
+                    For n30 = 1 To Len(varPostalCode)
+                        x30 = Mid(varPostalCode, n30, 1)
+                        If Mid(varPostalCode, n30, 1) = "n" Or Mid(varPostalCode, n30, 1) = "L" Then
+                            varPostalCodeFormat = varPostalCodeFormat & Mid(varPostalCode, n30, 1)
+                        End If
+                    Next
+                    'Get Customer PostalCode To n & L Characters
+                    xx10 = 0
+                    varSmallO = 0
+                    varSmallOPosition = 0
+                    varCustomerPostalCodeFormat = ""
+                    varCustomerPostalCode = UCase(DefaultBillingPostalCode)
+                    For n10 = 1 To Len(varCustomerPostalCode)
+                        x10 = Mid(varCustomerPostalCode, n10, 1)
+                        If Asc(x10) >= 65 And Asc(x10) <= 90 Then
+                            xx10 = xx10 + 1
+                            varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "L"
+                            If Asc(x10) = 79 Then
+                                varSmallO = 1
+                                varSmallOPosition = xx10
+                            End If
+                        ElseIf Asc(x10) >= 48 And Asc(x10) <= 57 Then
+                            xx10 = xx10 + 1
+                            varCustomerPostalCodeFormat = varCustomerPostalCodeFormat & "n"
+                        End If
+                    Next
+                    'Check For Correct Length
+                    If Len(varCustomerPostalCodeFormat) <> Len(varPostalCodeFormat) Then
+                        If InStr(1, varPostalCodeFormat, "L") > 0 Then
+                            If varRequiredFormat = "R" Then
+                                RetryNewCustomer = 1
+                                BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  It should be a combination of " & Len(varPostalCodeFormat) & " letters and numbers."
+                            Else
+                                If Request("CheckedBillingPostalCode") = "no" Then
+                                    varCheckedBillingPostalCode = 1
+                                    RetryNewCustomer = 1
+                                    BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                End If
+                            End If
+                        Else
+                            If varRequiredFormat = "R" Then
+                                RetryNewCustomer = 1
+                                BillingPostalCodeMessage = "Your Billing " & varBillingPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
+                            Else
+                                If Request("CheckedBillingPostalCode") = "no" Then
+                                    varCheckedBillingPostalCode = 1
+                                    RetryNewCustomer = 1
+                                    BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                End If
+                            End If
+                        End If
+                    End If
+                    'Check For Small O Instead Of A Zero
+                    If BillingPostalCodeMessage = "" Then
+                        If varSmallO = 1 Then
+                            If Mid(varPostalCodeFormat, varSmallOPosition, 1) <> "L" Then
+                                If varRequiredFormat = "R" Then
+                                    RetryNewCustomer = 1
+                                    BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  There is a letter 'O' where a number should be (maybe the number zero?)."
+                                Else
+                                    If Request("CheckedBillingPostalCode") = "no" Then
+                                        varCheckedBillingPostalCode = 1
+                                        RetryNewCustomer = 1
+                                        BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                    End If
+                                End If
+                            End If
+                        End If
+                    End If
+                    'Check For Numbers and Letters Where They Should Be
+                    If BillingPostalCodeMessage = "" Then
+                        For n20 = 1 To Len(varPostalCodeFormat)
+                            If Mid(varPostalCodeFormat, n20, 1) <> Mid(varCustomerPostalCodeFormat, n20, 1) Then
+                                If InStr(1, varPostalCodeFormat, "L") > 0 Then
+                                    If varRequiredFormat = "R" Then
+                                        RetryNewCustomer = 1
+                                        BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  It needs to be a combination of letters and numbers matching this format: " _
+                                         & Right(varBillingFullPostalCodeFormat, Len(varBillingFullPostalCodeFormat) - 1) & " (where 'n' is a number and 'L' is a letter."
+                                    Else
+                                        If Request("CheckedBillingPostalCode") = "no" Then
+                                            varCheckedBillingPostalCode = 1
+                                            RetryNewCustomer = 1
+                                            BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                        End If
+                                    End If
+                                Else
+                                    If varRequiredFormat = "R" Then
+                                        RetryNewCustomer = 1
+                                        BillingPostalCodeMessage = "Your Billing " & varBillingPostalCodeWord & " needs to be " & Len(varPostalCodeFormat) & " numbers long (no letters)."
+                                    Else
+                                        If Request("CheckedBillingPostalCode") = "no" Then
+                                            varCheckedBillingPostalCode = 1
+                                            RetryNewCustomer = 1
+                                            BillingPostalCodeMessage = "Please re-check your Billing " & varBillingPostalCodeWord & ".  If you are sure it is correct then ignore this message and submit your information again."
+                                        End If
+                                    End If
+                                End If
+                            End If
+                        Next
+                    End If
+                End If
+            End If
+        End If
+        'Billing Island
+        BillingIslandMessage = ""
+        DefaultBillingIsland = CapFirstLetter(SanitizeNameAndAddress(Request("BillingIsland")))
+        If varBillingIslandRequired = "y" Then
+            If DefaultBillingIsland = "" Then
+                RetryNewCustomer = 1
+                BillingIslandMessage = "Please enter your Billing " & varBillingIslandWord & "."
+            End If
+        End If
+        'Phone
+        PhoneMessage = ""
+        DefaultPhone = SanitizeNameAndAddress(Request("Phone"))
+        If DefaultPhone = "" Then
+            RetryNewCustomer = 1
+            PhoneMessage = "You must enter a real phone number."
+        End If
+        If CheckForBadPhone(DefaultPhone) = 1 Then
+            RetryNewCustomer = 1
+            PhoneMessage = "Please check your phone number.  Customers outside the USA must enter a REAL phone number because FedEx and other delivery services will not deliver without a phone number."
+        End If
+        'Check Email
+        EmailMessage = ""
+        DefaultEmail = Request("Email")
+        DefaultEmail = Replace(DefaultEmail, " ", "")
+        If DefaultEmail = "" Then
+            RetryNewCustomer = 1
+            EmailMessage = "You must enter your E-mail so we can contact you if there is a problem with your order."
+        ElseIf Len(DefaultEmail) > 4 And UCase(Left(DefaultEmail, 4)) = "WWW." Then
+            DefaultEmail = Right(DefaultEmail, Len(DefaultEmail) - 4)
+        End If
+        If InStr(1, DefaultEmail, "@") = 0 Then
+            RetryNewCustomer = 1
+            EmailMessage = "Please enter a valid Email address. All valid Email addresses contain the '@' character."
+        End If
+        If InStr(1, DefaultEmail, "@.") > 0 Then
+            RetryNewCustomer = 1
+            EmailMessage = "Please enter a valid Email address. A period can not immediately follow the '@' character."
+        End If
+        If InStr(1, DefaultEmail, ".@") > 0 Then
+            RetryNewCustomer = 1
+            EmailMessage = "Please enter a valid Email address. A period can not immediately precede the '@' character."
+        End If
+        If InStr(1, DefaultEmail, ".") = 0 Then
+            RetryNewCustomer = 1
+            EmailMessage = "Please enter a valid Email address. All valid Email addresses contain a dot (period) character."
+        End If
+        If DefaultEmail <> "" And EmailMessage = "" Then
+            Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                SqlConnection.ClearPool(conn)
+                conn.Open()
+                Dim CMD_X As New SqlCommand("spCheckLogInEmailExists", conn)
+                CMD_X.CommandType = Data.CommandType.StoredProcedure
+                CMD_X.Parameters.AddWithValue("@LogInEmail", DefaultEmail)
+                Dim readerX As SqlDataReader
+                readerX = CMD_X.ExecuteReader
+                If readerX.HasRows Then
+                    readerX.Read()
+                    RetryNewCustomer = 1
+                    EmailMessage = "You already set up an account with your email address."
+                End If
+            End Using
+        End If
+        'ResidentialDelivery
+        DefaultResidentialDelivery = SanitizeNameAndAddress(Request("ResidentialDelivery"))
+        ResidentialDeliveryMessage = ""
+        If Len(DefaultResidentialDelivery) > 1 Then
+            DefaultResidentialDelivery = Left(DefaultResidentialDelivery, 1)
+        End If
+        If UCase(DefaultResidentialDelivery) <> "Y" And UCase(DefaultResidentialDelivery) <> "N" Then
+            RetryNewCustomer = 1
+            ResidentialDeliveryMessage = "Residential Delivery must be 'y' or 'n'."
+        End If
+        'ChargeSalesTax
+        DefaultChargeSalesTax = SanitizeNameAndAddress(Request("ChargeSalesTax"))
+        ChargeSalesTaxMessage = ""
+        If Len(DefaultChargeSalesTax) > 1 Then
+            DefaultChargeSalesTax = Left(DefaultChargeSalesTax, 1)
+        End If
+        If DefaultChargeSalesTax <> "" And UCase(DefaultChargeSalesTax) <> "N" Then
+            RetryNewCustomer = 1
+            ChargeSalesTaxMessage = "ChargeSalesTax must be 'n' or left blank."
+        End If
+        'Check Pword
+        PwordMessage = ""
+        DefaultPword = Request("Pword")
+        If DefaultPword = "" And Session("PowerUserName") <> "" Then
+            Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                SqlConnection.ClearPool(conn)
+                conn.Open()
+                Dim CMD_X As New SqlCommand("spFigurePassword", conn)
+                CMD_X.CommandType = Data.CommandType.StoredProcedure
+                Dim readerX As SqlDataReader
+                readerX = CMD_X.ExecuteReader
+                readerX.Read()
+                DefaultPword = readerX("Password")
+            End Using
+        Else
+            If DefaultPword = "" Then
+                RetryNewCustomer = 1
+                PwordMessage = "You did not enter a password."
+            ElseIf Len(DefaultPword) < 6 Then
+                RetryNewCustomer = 1
+                PwordMessage = "Must be at least 6 letters long."
+            Else
+                For n = 1 To Len(Request("Pword"))
+                    cc = Asc(Mid(Request("Pword"), n, 1))
+                    If (cc < 48 Or (cc > 57 And cc < 65) Or (cc > 90 And cc < 97) Or cc > 122) And cc <> 33 And cc <> 35 And cc <> 36 And cc <> 37 And cc <> 38 And cc <> 40 And cc <> 41 And cc <> 42 And cc <> 64 And cc <> 94 Then
+                        RetryNewCustomer = 1
+                        PwordMessage = "Must contain only letters, numbers or these special characters: !@#$%^&*()"
+                        Exit For
+                    End If
+                Next
+            End If
+        End If
+        'New Release Email
+        If Request("NewReleaseEmail") = "on" Or Request("NewReleaseEmail") = "active" Then
+            varChecked = "checked"
+        Else
+            varChecked = ""
+        End If
+        'Phoney CustomerID
+        varNewCustomerID = "NEW-CUST" & phoneycustomerid
+        'Enter New Customer-------------------------------------------------------------------------------
+        If RetryNewCustomer = 0 Then
+            Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                SqlConnection.ClearPool(conn)
+                conn.Open()
+                Dim CMD_X As New SqlCommand("spInsertCustomer", conn)
+                CMD_X.CommandType = Data.CommandType.StoredProcedure
+                CMD_X.Parameters.AddWithValue("@PriceGroup", varPriceGroup)
+                CMD_X.Parameters.AddWithValue("@CustomerID", varNewCustomerID)
+                CMD_X.Parameters.AddWithValue("@FullName", IsSomething(DefaultFullName, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@StreetAddress1", IsSomething(DefaultStreetAddress1, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@StreetAddress2", IsSomething(DefaultStreetAddress2, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@City", IsSomething(DefaultCity, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@StateProvince", IsSomething(DefaultStateProvince, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@PostalCode", IsSomething(DefaultPostalCode, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Island", IsSomething(DefaultIsland, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Country", IsSomething(defaultCountry, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingFullName", IsSomething(DefaultBillingFullName, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingStreetAddress1", IsSomething(DefaultBillingStreetAddress1, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingStreetAddress2", IsSomething(DefaultBillingStreetAddress2, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingCity", IsSomething(DefaultBillingCity, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingStateProvince", IsSomething(DefaultBillingStateProvince, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingPostalCode", IsSomething(DefaultBillingPostalCode, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingIsland", IsSomething(DefaultBillingIsland, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@BillingCountry", IsSomething(defaultBillingCountry, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Phone", IsSomething(DefaultPhone, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Phone2", DBNull.Value)
+                CMD_X.Parameters.AddWithValue("@Phone3", DBNull.Value)
+                CMD_X.Parameters.AddWithValue("@Email", IsSomething(DefaultEmail, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Email2", DBNull.Value)
+                CMD_X.Parameters.AddWithValue("@Email3", DBNull.Value)
+                CMD_X.Parameters.AddWithValue("@LogInEmail", IsSomething(DefaultEmail, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@Password", IsSomething(DefaultPword, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@HowFoundUs", DBNull.Value)
+                Dim fallbackIp As String = "127.0.0.1"
+                Dim rawIp As String = Request.ServerVariables("HTTP_X_FORWARDED_FOR")
+                Dim clientIp As String = fallbackIp
+
+                If Not String.IsNullOrEmpty(rawIp) Then
+                    clientIp = rawIp
+                End If
+                CMD_X.Parameters.AddWithValue("@IPAddress", clientIp)
+                CMD_X.Parameters.AddWithValue("@ResidentialDelivery", IsSomething(DefaultResidentialDelivery, DBNull.Value))
+                CMD_X.Parameters.AddWithValue("@ChargeSalesTax", IsSomething(DefaultChargeSalesTax, DBNull.Value))
+                Dim outputID As New SqlParameter("@IDOUTPUT", Data.SqlDbType.Int)
+                CMD_X.Parameters.Add(outputID)
+                outputID.Direction = Data.ParameterDirection.Output
+                CMD_X.ExecuteNonQuery()
+                varNewCustomerCounter = outputID.Value
+            End Using
+            Session("PasswordMaster") = DefaultPword
+            'Record New Releases Email Info
+            If Request("NewReleaseEmail") = "" Then
+                Using conn As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                    SqlConnection.ClearPool(conn)
+                    conn.Open()
+                    Dim CMD_X As New SqlCommand("spInsertNewReleaseEmailOptInOrOut", conn)
+                    CMD_X.CommandType = Data.CommandType.StoredProcedure
+                    CMD_X.Parameters.AddWithValue("@FullName", DefaultFullName)
+                    CMD_X.Parameters.AddWithValue("@Email", DefaultEmail)
+                    CMD_X.Parameters.AddWithValue("@Password", DefaultPword)
+                    CMD_X.ExecuteNonQuery()
+                End Using
+            End If
+            'Email Instant Wholesale Password
+            If varWholesaleOrRetail = "wholesale" And Z_CheckValidEmail(DefaultEmail) = "yes" And strDoNotEmailSignInCredentials = "n" Then
+                Call Z_EmailWholesalePassword(varNewCustomerCounter, strConnectionStringName)
+            End If
+            'Email Ernie
+            varEmailBody = DefaultPhone
+            varEmailBody = varEmailBody & vbCrLf & vbCrLf & "BILL TO ADDRESS:"
+            varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultBillingFullName
+            varEmailBody = varEmailBody & vbCrLf & DefaultBillingStreetAddress1
+            If DefaultBillingStreetAddress2 <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultBillingStreetAddress2
+            End If
+            If DefaultBillingCity <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultBillingCity
+            End If
+            If DefaultBillingStateProvince <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultBillingStateProvince
+            End If
+            If DefaultBillingPostalCode <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultBillingPostalCode
+            End If
+            If DefaultBillingIsland <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultBillingIsland
+            End If
+            If defaultBillingCountry <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & defaultBillingCountry
+            End If
+            varEmailBody = varEmailBody & vbCrLf & vbCrLf & vbCrLf & "SHIP TO ADDRESS:"
+            varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultFullName
+            varEmailBody = varEmailBody & vbCrLf & DefaultStreetAddress1
+            If DefaultStreetAddress2 <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultStreetAddress2
+            End If
+            If DefaultCity <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultCity
+            End If
+            If DefaultStateProvince <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultStateProvince
+            End If
+            If DefaultPostalCode <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultPostalCode
+            End If
+            If DefaultIsland <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & DefaultIsland
+            End If
+            If defaultCountry <> "" Then
+                varEmailBody = varEmailBody & vbCrLf & defaultCountry
+            End If
+            varEmailBody = varEmailBody & vbCrLf & vbCrLf & DefaultEmail
+
+            subSendEmail("ernie@millionsofrecords.com", "ernieb12345@gmail.com", "NWEB " & DefaultFullName & " - " & defaultCountry, varEmailBody, 1, 0, strConnectionStringName)
+
+            'Redirect for new customer entered by PowerUser
+            If Session("PowerUserName") <> "" And Session("SuperPowerUserName") = "" Then
+                Response.Redirect("/CustomerAdded.aspx")
+                Response.End()
+            End If
+            'Sign In New Customer
+            Session("PriceGroup") = varPriceGroup
+            Session("CustomerServerCounter") = varNewCustomerCounter.ToString
+            Session("CustomerID") = varNewCustomerID
+            Session("LogInEmailMaster") = DefaultEmail
+            Session("PasswordMaster") = DefaultPword
+            Session("PostalCode") = DefaultPostalCode
+            Session("BillingPostalCode") = DefaultBillingPostalCode
+            Session("Country") = defaultCountry
+            Session("BillingCountry") = defaultBillingCountry
+            Session("StoreName") = DefaultFullName
+            Session("ShippingCartCountry") = Session("Country")
+            Session("ShippingCartPostalCode") = DefaultPostalCode
+            If Len(Session("ShippingCartPostalCode")) = 0 Then Session("ShippingCartPostalCode") = ""
+            Session("PostalCodeHelpShipping") = ""
+            Session("ShippingCartShippingMethod") = ""
+            Session("ShippingCartZone") = ""
+            If UCase(DefaultResidentialDelivery) = "N" Then
+                Session("ResidentialDelivery") = "NO"
+            Else
+                Session("ResidentialDelivery") = "YES"
+            End If
+            Session("WebOrderNumberJustPurchased") = ""
+            'Empty Retail Cart Into Wholesale Cart (if not a PowerUser) 
+            RetailNameOfCart = "CART" & Session.SessionID & Session("CartRandomNumbersExtension")
+            WholesaleNameOfCart = "W_CART_" & Session("CustomerServerCounter")
+            If Session("PowerUserName") = "" Then
+                Using conn3 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                    SqlConnection.ClearPool(conn3)
+                    conn3.Open()
+                    Dim CMD_RC As New SqlCommand("spGetCartItems", conn3)
+                    CMD_RC.CommandType = Data.CommandType.StoredProcedure
+                    CMD_RC.Parameters.AddWithValue("@CartName", RetailNameOfCart)
+                    Dim readerRC As SqlDataReader
+                    readerRC = CMD_RC.ExecuteReader
+                    If readerRC.HasRows Then
+                        Do While readerRC.Read
+                            If readerRC("Quantity") = 0 Then
+                                Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                                    SqlConnection.ClearPool(conn4)
+                                    conn4.Open()
+                                    Dim CMD_D As New SqlCommand("spDeleteCartItem", conn4)
+                                    CMD_D.CommandType = Data.CommandType.StoredProcedure
+                                    CMD_D.Parameters.AddWithValue("@CartName", RetailNameOfCart)
+                                    CMD_D.Parameters.AddWithValue("@ItemID", readerRC("ItemID"))
+                                    CMD_D.ExecuteNonQuery()
+                                End Using
+                            Else
+                                Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                                    SqlConnection.ClearPool(conn4)
+                                    conn4.Open()
+                                    Dim CMD_D As New SqlCommand("spGetInventoryItem", conn4)
+                                    CMD_D.CommandType = Data.CommandType.StoredProcedure
+                                    CMD_D.Parameters.AddWithValue("@ID", readerRC("ItemID"))
+                                    Dim readerInv As SqlDataReader
+                                    readerInv = CMD_D.ExecuteReader
+                                    If readerInv.HasRows Then
+                                        readerInv.Read()
+                                        If Session("PriceGroup") = "StorePrice" Then
+                                            If Not IsDBNull(readerInv("Sale_WholesalePrice")) And Not IsDBNull(readerInv("Sale_WholesaleEndDate")) Then
+                                                If DateDiff(DateInterval.Day, Date.Now, readerInv("Sale_WholesaleEndDate")) >= 0 Then
+                                                    varSaleItem = 1
+                                                End If
+                                            End If
+                                        Else
+                                            If Not IsDBNull(readerInv("Sale_RetailPrice")) And Not IsDBNull(readerInv("Sale_RetailEndDate")) Then
+                                                If DateDiff(DateInterval.Day, Date.Now, readerInv("Sale_RetailEndDate")) >= 0 Then
+                                                    varSaleItem = 1
+                                                End If
+                                            End If
+                                        End If
+                                        If varSaleItem = 1 Then
+                                            If Session("PriceGroup") = "StorePrice" Then
+                                                If IsDBNull(readerInv("Sale_WholesalePrice")) Then
+                                                    LogInPrice = 0
+                                                Else
+                                                    LogInPrice = readerInv("Sale_WholesalePrice")
+                                                End If
+                                            Else
+                                                If IsDBNull(readerInv("Sale_RetailPrice")) Then
+                                                    LogInPrice = 0
+                                                Else
+                                                    LogInPrice = readerInv("Sale_RetailPrice")
+                                                End If
+                                            End If
+                                        ElseIf Session("PriceGroup") = "StorePrice" Then
+                                            LogInPrice = readerInv("StorePrice")
+                                        ElseIf Session("PriceGroup") = "RetailPrice" Then
+                                            LogInPrice = readerInv("RetailPrice")
+                                        End If
+                                    End If
+                                End Using
+                                Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                                    SqlConnection.ClearPool(conn4)
+                                    conn4.Open()
+                                    Dim CMD_D As New SqlCommand("spAddRetailCartItemToWholesaleCart", conn4)
+                                    CMD_D.CommandType = Data.CommandType.StoredProcedure
+                                    CMD_D.Parameters.AddWithValue("@CartName", WholesaleNameOfCart)
+                                    CMD_D.Parameters.AddWithValue("@ItemID", readerRC("ItemID"))
+                                    CMD_D.Parameters.AddWithValue("@Quantity", readerRC("Quantity"))
+                                    CMD_D.Parameters.AddWithValue("@WholesalePrice", LogInPrice)
+                                    CMD_D.Parameters.AddWithValue("@SearchCriteriaStatisticsID", readerRC("SearchCriteriaStatisticsID"))
+                                    CMD_D.Parameters.AddWithValue("@IPAddress", readerRC("IPAddress"))
+                                    CMD_D.ExecuteNonQuery()
+                                End Using
+                            End If
+                            Response.Cookies("Chosen").Value = "none"
+                            Response.Cookies("Chosen").Path = "/"
+                        Loop
+                        Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                            SqlConnection.ClearPool(conn4)
+                            conn4.Open()
+                            Dim CMD_D As New SqlCommand("spDeleteCart", conn4)
+                            CMD_D.CommandType = Data.CommandType.StoredProcedure
+                            CMD_D.Parameters.AddWithValue("@CartName", RetailNameOfCart)
+                            CMD_D.ExecuteNonQuery()
+                        End Using
+                        Using conn4 As New SqlConnection(ConfigurationManager.ConnectionStrings(strConnectionStringName).ConnectionString)
+                            SqlConnection.ClearPool(conn4)
+                            conn4.Open()
+                            Dim CMD_D As New SqlCommand("spUpdateCartQuantityInCustomersTable", conn4)
+                            CMD_D.CommandType = Data.CommandType.StoredProcedure
+                            CMD_D.Parameters.AddWithValue("@CustomerServerCounter", IsSomething(Session("CustomerServerCounter"), "0"))
+                            CMD_D.ExecuteNonQuery()
+                        End Using
+                    End If
+                End Using
+            End If
+            'Redirect Successful New Customer
+            If varContinueToPurchasePage = "y" Then
+                Response.Redirect("/Purchase.aspx")
+            ElseIf Session("PowerUserName") <> "" Then
+                Response.Redirect("/CustomerInfo.aspx")
+            Else
+                Response.Redirect("/WholesaleAccepted.aspx")
+            End If
+        End If
+    Else
+        If varWholesaleOrRetail="wholesale" then
+            defaultResidentialDelivery="n"
+        else
+            defaultResidentialDelivery="y"
+        end if
+        defaultChargeSalesTax=""
+    end if%>
 
 <form autocomplete="off"name="NC" id="NC"action="/NewCustomer.aspx" method="post">
 <input type="hidden" name="NewCustomer" id="NewCustomer"value="yes">
