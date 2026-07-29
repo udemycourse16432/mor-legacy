@@ -408,10 +408,8 @@ function hideCreditCardDiv() {
 
  Dim strConnectionStringName As String = Master.ConnectionStringName
 
- Dim varServerCounter As String = ""
  Dim NameOfCart As String = Master.CartName
  Dim varPriceGroup As String = Master.PriceGroup
- Dim varServerCounter As String = ""
  'BroadcastLinkURL Variable
  Dim varBroadcastLinkURL As String = ""
  If Request("BroadcastLinkURL") <> "" Then
