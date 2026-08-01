@@ -130,6 +130,7 @@
     <Content Include="CustomerInfo.aspx" />
     <Content Include="AboutUs.aspx" />
     <Content Include="Country.aspx" />
+    <Content Include="ItemDetails.aspx" />
     <Content Include="Global.asax" />
     <Content Include="NewCustomer.aspx" />
     <Content Include="Site.Master" />
